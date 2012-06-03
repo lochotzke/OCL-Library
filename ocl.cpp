@@ -1,12 +1,18 @@
+//----------------------------------------------------//
+// This is the OCL Library Source File, feel free to  //
+//    use and edit for your own use. This is free     //
+//    to the public so please give credit and post    //
+//    it free for others to use as well.              //
+//                                                    //
+// David Medina                                       //
+//----------------------------------------------------//
+
 #ifndef OCL_SETUP_C
 #define OCL_SETUP_C
 
 /* 
-|----------------------+-------------------------|
-| VARIABLE             |  DESCRIPTION            |
-|----------------------+-------------------------|
-| OCL_OUTPUT_BUILD_LOG | Outputs Build Log       |
-|----------------------+-------------------------|
+#define OCL_OUTPUT_BUILD_LOG 1 
+   to output the build log, otherwise the build log is neglected
 
 Note:
    Valgrind shows memory leaks due to the follwing OpenCL functions hiding memory movement:

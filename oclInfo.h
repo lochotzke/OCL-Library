@@ -1,3 +1,12 @@
+//----------------------------------------------------//
+// This is the OCL Library Information File, feel     //
+//    free to use and edit for your own use. This     //
+//    is free to the public so please give credit     //
+//    and post it free for others to use as well.     //
+//                                                    //
+// David Medina                                       //
+//----------------------------------------------------//
+
 #ifndef OCL_SETUP_INFO
 #define OCL_SETUP_INFO
 
