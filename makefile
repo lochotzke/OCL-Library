@@ -1,4 +1,3 @@
-hPath = ${HOME}/.headers
 paths = -I$(hPath) -I/usr/local/cuda/include
 links = -fopenmp -lm -L/usr/local/cuda/lib -lOpenCL
 sources = main.cpp ocl.cpp
@@ -9,10 +8,8 @@ all: main
 main: $(objects)
 	g++ $(objects) $(paths) $(links)
 main.o: main.cpp
-	g++ -c -w -I$(hPath) main.cpp
+	g++ -c -w  main.cpp
 ocl.o: ocl.cpp
-	g++ -c -w -I$(hPath) $(hPath)/ocl.cpp
+	g++ -c -w ocl.cpp
 clean:
 	rm *.o;
-
-vpath %.cpp $(hPath)
