@@ -1,4 +1,4 @@
-paths = -I$(hPath) -I/usr/local/cuda/include
+paths = -I/usr/local/cuda/include
 links = -fopenmp -lm -L/usr/local/cuda/lib -lOpenCL
 sources = main.cpp ocl.cpp
 objects = $(sources:.cpp=.o)
