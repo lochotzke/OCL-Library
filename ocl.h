@@ -17,7 +17,7 @@ class kernel;
 class device;
 class ocl_mem;
 
-class ocSetup{
+class oclSetup{
  private:
   std::string shortInfo,longInfo,question1,question2;
 
@@ -29,8 +29,8 @@ class ocSetup{
   cl_int err;
 
  public:
-  ocSetup();
-  ~ocSetup();
+  oclSetup();
+  ~oclSetup();
   void findDevices();
   void findDeviceInformation();
   device displayDevices();
