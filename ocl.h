@@ -1,12 +1,3 @@
-//----------------------------------------------------//
-// This is the OCL Library header, feel free to       //
-//    use and edit for your own use. This is free     //
-//    to the public so please give credit and post    //
-//    it free for others to use as well.              //
-//                                                    //
-// David Medina                                       //
-//----------------------------------------------------//
-
 #ifndef OCL_SETUP_H
 #define OCL_SETUP_H
 
@@ -17,7 +8,7 @@ class kernel;
 class device;
 class ocl_mem;
 
-class oclSetup{
+class ocSetup{
  private:
   std::string shortInfo,longInfo,question1,question2;
 
@@ -29,8 +20,8 @@ class oclSetup{
   cl_int err;
 
  public:
-  oclSetup();
-  ~oclSetup();
+  ocSetup();
+  ~ocSetup();
   void findDevices();
   void findDeviceInformation();
   device displayDevices();

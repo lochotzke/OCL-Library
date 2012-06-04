@@ -1,18 +1,12 @@
-//----------------------------------------------------//
-// This is the OCL Library Source File, feel free to  //
-//    use and edit for your own use. This is free     //
-//    to the public so please give credit and post    //
-//    it free for others to use as well.              //
-//                                                    //
-// David Medina                                       //
-//----------------------------------------------------//
-
 #ifndef OCL_SETUP_C
 #define OCL_SETUP_C
 
 /* 
-#define OCL_OUTPUT_BUILD_LOG 1 
-   to output the build log, otherwise the build log is neglected
+|----------------------+-------------------------|
+| VARIABLE             |  DESCRIPTION            |
+|----------------------+-------------------------|
+| OCL_OUTPUT_BUILD_LOG | Outputs Build Log       |
+|----------------------+-------------------------|
 
 Note:
    Valgrind shows memory leaks due to the follwing OpenCL functions hiding memory movement:
@@ -23,7 +17,7 @@ Note:
          clCreateProgramWithSource()
 	 clBuildProgram()
 	 clCreateKernel()
-   oclSetup::findDevices() from either of the following:
+   ocSetup::findDevices() from either of the following:
          clGetPlatformIDs()
 	 clGetDeviceIDs()
  */
@@ -45,7 +39,7 @@ using namespace std;
 //-----------------------------//
 //           OCSETUP           //
 //-----------------------------//
-oclSetup::oclSetup(){
+ocSetup::ocSetup(){
   shortInfo = "";
   longInfo = "";
 
@@ -61,35 +55,35 @@ oclSetup::oclSetup(){
               "Input: ";
 }
 
-oclSetup::~oclSetup(){
-  free(pID);
+ocSetup::~ocSetup(){
+  delete[] pID;
   for(int i=0;i<pSize;i++)
-    free(dID[i]);
-  free(dID);
-  free(dSize);
+    delete[] dID[i];
+  delete[] dID;
+  delete[] dSize;
 }
 
-void oclSetup::findDevices(){
+void ocSetup::findDevices(){
   int maxP = 64,maxD = 64;
   cl_platform_id pID2[maxP];
   cl_device_id dID2[maxD];
 
   clGetPlatformIDs(maxP, pID2, &pSize);	
-  pID = (cl_platform_id*) malloc(pSize*sizeof(cl_platform_id));
-  dID = (cl_device_id**)  malloc(pSize*sizeof(cl_device_id*));
-  dSize = (cl_uint*)      malloc(pSize*sizeof(cl_uint));
+  pID = new cl_platform_id[pSize*sizeof(cl_platform_id)];
+  dID = new cl_device_id*[pSize*sizeof(cl_device_id*)];
+  dSize = new cl_uint[pSize*sizeof(cl_uint)];
 
   for(int i=0;i<pSize;i++){
     pID[i] = pID2[i];
 
     clGetDeviceIDs(pID[i],CL_DEVICE_TYPE_ALL, maxD, dID2, dSize+i);
-    dID[i] = (cl_device_id*) malloc(dSize[i]*sizeof(cl_device_id));
+    dID[i] = new cl_device_id[dSize[i]*sizeof(cl_device_id)];
     for(int j=0;j<dSize[i];j++)
       dID[i][j] = dID2[j];
   }
 }
 
-void oclSetup::findDeviceInformation(){
+void ocSetup::findDeviceInformation(){
   int bSize = 8192;
   char buffer[bSize];
   cl_ulong buf_ulong;
@@ -206,7 +200,7 @@ void oclSetup::findDeviceInformation(){
   longInfo = str.str();
 }
 
-device oclSetup::displayDevices(){  
+device ocSetup::displayDevices(){  
   if(shortInfo.empty())
     findDeviceInformation();
 
@@ -234,7 +228,7 @@ device oclSetup::displayDevices(){
     return device(pID[di],dID[di][dj]);
 }
 
-device oclSetup::getDevice(int p,int d){
+device ocSetup::getDevice(int p,int d){
   return device(pID[p],dID[p][d]);
 }
 
@@ -255,9 +249,9 @@ kernel::kernel(device* d,string str,string fstr){
 
 kernel::~kernel(){
   for(int i=0;i<inputs;i++)    
-    free(inputType[i]); 
-  free(inputType);
-  free(inputSize);
+    delete[] inputType[i]; 
+  delete[] inputType;
+  delete[] inputSize;
   clReleaseKernel(ker);
   clReleaseProgram(program);
 }
@@ -273,11 +267,11 @@ void kernel::setup(device* d,string str){
     int length = file.tellg();
     file.seekg(0,ios::beg);
   
-    char* tmp = (char*) malloc(length*sizeof(char));
+    char* tmp = new char[length*sizeof(char)];
     file.read(tmp,length);
 
     function = tmp;
-    free(tmp);
+    delete[] tmp;
   }
   else
     function = str;
@@ -298,14 +292,14 @@ void kernel::setup(device* d,string str){
   size_t logSize;
 
   err = clGetProgramBuildInfo(program, *(dev->getDevice()), CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);    
-  log = (char*) malloc(logSize);
+  log = new char[logSize];
   err = clGetProgramBuildInfo(program, *(dev->getDevice()), CL_PROGRAM_BUILD_LOG, logSize, log, NULL);  
   log[logSize] = '\0';
 
   if(logSize > 2)
     cout << "Build Log:\n\t" << log;
 
-  free(log);
+  delete[] log;
   #endif
 
   ker = clCreateKernel(program,name.c_str(),&err);
@@ -318,7 +312,7 @@ void kernel::getKernelInformation(string str){
 
   if(start < 9){
     cout << "Kernel: Getting Kernel Information Error\n";
-    exit(1);
+    throw 1;
   }
   
   string dm = " \t\n(*";
@@ -343,9 +337,9 @@ void kernel::getKernelInformation(string str){
   }
   inputs++;
   
-  int* pointer = (int*) calloc(inputs,sizeof(int));
-  inputType = (char**) malloc(inputs*sizeof(char*));
-  inputSize = (int*) malloc(inputs*sizeof(int));
+  int* pointer = new int[inputs,sizeof(int)]();
+  inputType = new char*[inputs*sizeof(char*)];
+  inputSize = new int[inputs*sizeof(int)];
   int pos = start+1;
 
   for(int i=0;i<inputs;i++){
@@ -366,7 +360,7 @@ void kernel::getKernelInformation(string str){
 
   for(int i=0;i<inputs;i++){
     if(pointer[i]){
-      inputType[i] = (char*) malloc(6*sizeof(char));
+      inputType[i] = new char[6*sizeof(char)];
       (ocl::type[6]).copy(inputType[i],6,0);
       inputType[i][6] = '\0';
 
@@ -378,7 +372,7 @@ void kernel::getKernelInformation(string str){
       while(dm.find(str[pos],0) == string::npos)
 	pos--;
 
-      inputType[i] = (char*) malloc((inputSize[i]-pos)*sizeof(char));
+      inputType[i] = new char[(inputSize[i]-pos)*sizeof(char)];
 
       str.copy(inputType[i],inputSize[i]-pos,pos+1);
       inputType[i][inputSize[i]-pos] = '\0';
@@ -387,7 +381,7 @@ void kernel::getKernelInformation(string str){
     }
   }
 
-  free(pointer);
+  delete[] pointer;
 }
 
 int kernel::sizeofType(string type){
@@ -408,7 +402,7 @@ int kernel::sizeofType(string type){
 
     if(current == (left+right)/2){
 	cout << "Kernel: Type <" << type << "> not found in oclInfo\n";
-	exit(1);
+	throw 1;
     }
   }
 }

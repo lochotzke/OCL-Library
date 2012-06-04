@@ -14,14 +14,16 @@ int main(){
   // Create a kernel using the device above from vectoradd.cl
   kernel k(&dev,"vectoradd.cl");
 
+  int N = 1024;
+
   // Create host variables
-  float* a = (float*) malloc(N*sizeof(float));
-  float* b = (float*) calloc(N*sizeof(float));
-  float* c = (float*) malloc(N*sizeof(float));
+  float* a = new float[N*sizeof(float)];
+  float* b = new float[N*sizeof(float)]();
+  float* c = new float[N*sizeof(float)];
 
   // Setup the values of a
   for(int i=0;i<N;i++)
-    a = i;
+    a[i] = i;
 
   // Allocate memory on the device
   ocl_mem cl_a = dev.malloc(N*sizeof(float),CL_MEM_READ_ONLY);
@@ -50,7 +52,7 @@ int main(){
   cout << endl;
 
   // Free host variables
-  free(a);
-  free(b);
-  free(c);
+  delete[] a;
+  delete[] b;
+  delete[] c;
 }
