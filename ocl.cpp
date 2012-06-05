@@ -17,7 +17,7 @@ Note:
          clCreateProgramWithSource()
 	 clBuildProgram()
 	 clCreateKernel()
-   ocSetup::findDevices() from either of the following:
+   oclSetup::findDevices() from either of the following:
          clGetPlatformIDs()
 	 clGetDeviceIDs()
  */
@@ -39,7 +39,7 @@ using namespace std;
 //-----------------------------//
 //           OCSETUP           //
 //-----------------------------//
-ocSetup::ocSetup(){
+oclSetup::oclSetup(){
   shortInfo = "";
   longInfo = "";
 
@@ -55,7 +55,7 @@ ocSetup::ocSetup(){
               "Input: ";
 }
 
-ocSetup::~ocSetup(){
+oclSetup::~oclSetup(){
   delete[] pID;
   for(int i=0;i<pSize;i++)
     delete[] dID[i];
@@ -63,7 +63,7 @@ ocSetup::~ocSetup(){
   delete[] dSize;
 }
 
-void ocSetup::findDevices(){
+void oclSetup::findDevices(){
   int maxP = 64,maxD = 64;
   cl_platform_id pID2[maxP];
   cl_device_id dID2[maxD];
@@ -83,7 +83,7 @@ void ocSetup::findDevices(){
   }
 }
 
-void ocSetup::findDeviceInformation(){
+void oclSetup::findDeviceInformation(){
   int bSize = 8192;
   char buffer[bSize];
   cl_ulong buf_ulong;
@@ -200,7 +200,7 @@ void ocSetup::findDeviceInformation(){
   longInfo = str.str();
 }
 
-device ocSetup::displayDevices(){  
+device oclSetup::displayDevices(){  
   if(shortInfo.empty())
     findDeviceInformation();
 
@@ -228,7 +228,7 @@ device ocSetup::displayDevices(){
     return device(pID[di],dID[di][dj]);
 }
 
-device ocSetup::getDevice(int p,int d){
+device oclSetup::getDevice(int p,int d){
   return device(pID[p],dID[p][d]);
 }
 

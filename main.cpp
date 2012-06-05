@@ -6,7 +6,7 @@
 using namespace std;
 int main(){
   // Get available devices and platforms
-  ocSetup o;
+  oclSetup o;
 
   // Get device 3 from platform 1
   device dev = o.getDevice(1,3);
