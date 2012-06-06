@@ -589,6 +589,13 @@ ocl_mem::~ocl_mem(){
     clReleaseMemObject(m);
 }
 
+void ocl_mem::free(){
+  if(s >= 0){
+    clReleaseMemObject(m);
+    s = -1;
+  }
+}
+
 void ocl_mem::copyTo(void* v){
   clEnqueueReadBuffer(*(*d).getCommandQueue(), m, CL_TRUE, 0, s, v,0,NULL,NULL);  
 }

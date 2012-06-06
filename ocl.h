@@ -117,6 +117,7 @@ class ocl_mem{
   void copyFrom(void*,size_t,size_t);
   void copyFromNB(void*);
   void copyFromNB(void*,size_t,size_t);
+  void free();
   cl_mem* mem();
   size_t getSize();
 };
