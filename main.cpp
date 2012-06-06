@@ -8,8 +8,8 @@ int main(){
   // Get available devices and platforms
   oclSetup o;
 
-  // Get device 3 from platform 1
-  device dev = o.getDevice(1,3);
+  // Get platform and device information and return the chosen one
+  device dev = o.displayDevices();
 
   // Create a kernel using the device above from vectoradd.cl
   kernel k(&dev,"vectoradd.cl");
