@@ -1,12 +1,19 @@
+//--------------------------------------------------------------------//
+//   Copyright (c) 2012, David Medina                                 //
+//   All rights reserved.                                             //
+//   License Located in:                                              //
+//      https://github.com/dmed256/OCL-Library/blob/master/LICENSE    //
+//--------------------------------------------------------------------//
+
 #ifndef OCL_SETUP_C
 #define OCL_SETUP_C
 
 /* 
-|----------------------+-------------------------|
-| VARIABLE             |  DESCRIPTION            |
-|----------------------+-------------------------|
-| OCL_OUTPUT_BUILD_LOG | Outputs Build Log       |
-|----------------------+-------------------------|
+//----------------------+-------------------------//
+// VARIABLE             |  DESCRIPTION            //
+//----------------------+-------------------------//
+// OCL_OUTPUT_BUILD_LOG | Outputs Build Log       //
+//----------------------+-------------------------//
 
 Note:
    Valgrind shows memory leaks due to the follwing OpenCL functions hiding memory movement:
