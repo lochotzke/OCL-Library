@@ -10,16 +10,16 @@
 
 Note:
    Valgrind shows memory leaks due to the follwing OpenCL functions hiding memory movement:
-   device::refresh() from either of the following:
-         clCreateContext()
-	 clCreateCommandQueue()
-   kernel::setup() from:
-         clCreateProgramWithSource()
-	 clBuildProgram()
-	 clCreateKernel()
-   oclSetup::findDevices() from either of the following:
-         clGetPlatformIDs()
-	 clGetDeviceIDs()
+   ocl_device::refresh() from either of the following:
+               clCreateContext()
+	       clCreateCommandQueue()
+   ocl_kernel::setup() from:
+               clCreateProgramWithSource()
+	       clBuildProgram()
+	       clCreateKernel()
+   ocl_setup::findDevices() from either of the following:
+              clGetPlatformIDs()
+	      clGetDeviceIDs()
  */
 
 #ifndef OCL_OUTPUT_BUILD_LOG
@@ -39,9 +39,9 @@ Note:
 using namespace std;
 
 //-----------------------------//
-//           OCSETUP           //
+//          OCL_SETUP          //
 //-----------------------------//
-oclSetup::oclSetup(){
+ocl_setup::ocl_setup(){
   shortInfo = "";
   longInfo = "";
 
@@ -57,7 +57,19 @@ oclSetup::oclSetup(){
               "Input: ";
 }
 
-oclSetup::~oclSetup(){
+ocl_setup::ocl_setup(const ocl_setup& s){
+  shortInfo = s.shortInfo;
+  longInfo  = s.longInfo;
+  question1 = s.question1;
+  question2 = s.question2;
+  pID = s.pID;
+  dID = s.dID;
+  pSize = s.pSize;
+  dSize = s.dSize;
+  err = s.err;
+}
+
+ocl_setup::~ocl_setup(){
   delete[] pID;
   for(int i=0;i<pSize;i++)
     delete[] dID[i];
@@ -65,7 +77,20 @@ oclSetup::~oclSetup(){
   delete[] dSize;
 }
 
-void oclSetup::findDevices(){
+ocl_setup& ocl_setup::operator=(const ocl_setup& s){
+  shortInfo = s.shortInfo;
+  longInfo  = s.longInfo;
+  question1 = s.question1;
+  question2 = s.question2;
+  pID = s.pID;
+  dID = s.dID;
+  pSize = s.pSize;
+  dSize = s.dSize;
+  err = s.err;
+  return *this;
+}
+
+void ocl_setup::findDevices(){
   int maxP = 64,maxD = 64;
   cl_platform_id pID2[maxP];
   cl_device_id dID2[maxD];
@@ -85,7 +110,7 @@ void oclSetup::findDevices(){
   }
 }
 
-void oclSetup::findDeviceInformation(){
+void ocl_setup::findDeviceInformation(){
   int bSize = 8192;
   char buffer[bSize];
   cl_ulong buf_ulong;
@@ -202,7 +227,7 @@ void oclSetup::findDeviceInformation(){
   longInfo = str.str();
 }
 
-device oclSetup::displayDevices(){  
+ocl_device ocl_setup::displayDevices(){  
   if(shortInfo.empty())
     findDeviceInformation();
 
@@ -216,57 +241,83 @@ device oclSetup::displayDevices(){
   gets(buffer);
 
   if(buffer[0] == '\0')
-    return device(pID[di],dID[di][dj]);
+    return ocl_device(pID[di],dID[di][dj]);
   else if(sscanf(buffer,"%d %d",&i,&j) == 2)
-    return device(pID[i],dID[i][j]);
+    return ocl_device(pID[i],dID[i][j]);
 
   cout << longInfo;
   printf(question2.c_str(),di,dj);
   gets(buffer);
 
   if(sscanf(buffer,"%d %d",&i,&j) == 2)
-    return device(pID[i],dID[i][j]);
+    return ocl_device(pID[i],dID[i][j]);
   else
-    return device(pID[di],dID[di][dj]);
+    return ocl_device(pID[di],dID[di][dj]);
 }
 
-device oclSetup::getDevice(int p,int d){
-  return device(pID[p],dID[p][d]);
+ocl_device ocl_setup::getDevice(int p,int d){
+  return ocl_device(pID[p],dID[p][d]);
 }
 
-cl_platform_id oclSetup::getPlatformID(int p){
+cl_platform_id ocl_setup::getPlatformID(int p){
   return pID[p];
 }
 
-cl_device_id oclSetup::getDeviceID(int p,int d){
+cl_device_id ocl_setup::getDeviceID(int p,int d){
   return dID[p][d];
 } 
 
 //-----------------------------//
-//           KERNEL            //
+//          OCL_KERNEL          //
 //-----------------------------//
 
-kernel::kernel(){}
+ocl_kernel::ocl_kernel(){}
 
-kernel::kernel(device* d,string str){
+ocl_kernel::ocl_kernel(const ocl_kernel& k){
+  dev = k.dev;
+  flags = k.flags;
+  ker = k.ker;
+  program = k.program;
+  name = k.name;
+  function = k.function;
+  inputs = k.inputs;
+  inputSize = k.inputSize;
+  inputType = k.inputType;
+  groups = k.groups;
+  items = k.items;
+}
+
+ocl_kernel::ocl_kernel(ocl_device* d,string str){
   setup(d,str);
 }
 
-kernel::kernel(device* d,string str,string fstr){
+ocl_kernel::ocl_kernel(ocl_device* d,string str,string fstr){
   flags = fstr;
   setup(d,str);
 }
 
-kernel::~kernel(){
-  if(!function.compare(""))
-    return;
-
+ocl_kernel::~ocl_kernel(){
   delete[] inputSize;
   clReleaseKernel(ker);
   clReleaseProgram(program);
 }
 
-void kernel::setup(device* d,string str){
+ocl_kernel& ocl_kernel::operator=(const ocl_kernel& k){
+  dev = k.dev;
+  flags = k.flags;
+  ker = k.ker;
+  program = k.program;
+  name = k.name;
+  function = k.function;
+  inputs = k.inputs;
+  inputSize = k.inputSize;
+  inputType = k.inputType;
+  groups = k.groups;
+  items = k.items;
+  return *this;
+}
+
+void ocl_kernel::setup(ocl_device* d,string str){
   dev = d;
   cl_int err;
 
@@ -290,20 +341,21 @@ void kernel::setup(device* d,string str){
 
   const char* cFunction = function.c_str();
   const size_t cLength = function.length();
+  cl_device_id dID = dev->getDeviceID();
+  
+  program = clCreateProgramWithSource(dev->getContext(),1,&cFunction,&cLength,&err);
+  printError("OCL_Kernel: Constructing Program",err);
 
-  program = clCreateProgramWithSource(*(dev->getContext()),1,&cFunction,&cLength,&err);
-  printError("Kernel: Constructing Program",err);
-
-  err = clBuildProgram(program,1,dev->getDevice(),flags.c_str(),NULL,NULL);
-  printError("Kernel: Building Program",err);
+  err = clBuildProgram(program,1,&dID,flags.c_str(),NULL,NULL);
+  printError("OCL_Kernel: Building Program",err);
 
 #if OCL_OUTPUT_BUILD_LOG
   char* log;
   size_t logSize;
 
-  err = clGetProgramBuildInfo(program, *(dev->getDevice()), CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);    
+  err = clGetProgramBuildInfo(program, dev->getDeviceID(), CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);    
   log = new char[logSize];
-  err = clGetProgramBuildInfo(program, *(dev->getDevice()), CL_PROGRAM_BUILD_LOG, logSize, log, NULL);  
+  err = clGetProgramBuildInfo(program, dev->getDeviceID(), CL_PROGRAM_BUILD_LOG, logSize, log, NULL);  
   log[logSize] = '\0';
 
   cout << "Build Log:\n\t" << log;
@@ -312,16 +364,20 @@ void kernel::setup(device* d,string str){
 #endif
 
   ker = clCreateKernel(program,name.c_str(),&err);
-  printError("Kernel: Creating Kernel",err);
+  printError("OCL_Kernel: Creating Kernel",err);
 }
 
-void kernel::getKernelInformation(string str){
+void ocl_kernel::getKernelInformation(string str){
   int start = str.find("__kernel",0) + 9;
   int end;
 
   if(start < 9){
-    cout << "Kernel: Getting Kernel Information Error\n";
-    throw 1;
+    try{
+      throw 1;
+    }
+    catch(int i){
+      cout << "OCL_Kernel: Getting Kernel Information Error\n";
+    }
   }
   
   string dm = " \t\n(*";
@@ -387,7 +443,7 @@ void kernel::getKernelInformation(string str){
   delete[] pointer;
 }
 
-int kernel::sizeofType(string type){
+int ocl_kernel::sizeofType(string type){
   int left = 0;
   int right = ocl::types-1;
   int current,check;
@@ -404,177 +460,331 @@ int kernel::sizeofType(string type){
       right = current;
 
     if(current == (left+right)/2){
-	cout << "Kernel: Type <" << type << "> not found in oclInfo\n";
+      try{
 	throw 1;
+      }
+      catch(int i){
+	cout << "OCL_Kernel: Type <" << type << "> not found in oclInfo\n";
+      }
     }
   }
 }
 
-void kernel::setDims(size_t g,size_t i){
+void ocl_kernel::setDims(size_t g,size_t i){
   groups = g;
   items = i;
 }
 
-void kernel::setArgs(void* x,...){
+void ocl_kernel::setArgs(void* x,...){
   va_list list;
   va_start(list,x);
   
-  printError("Kernel: Setting Kernel Arguments",
+  printError("OCL_Kernel: Setting Kernel Arguments",
   	     clSetKernelArg(ker,0,inputSize[0],x));
   for(int i=1;i<inputs;i++)
-    printError("Kernel: Setting Kernel Arguments",
+    printError("OCL_Kernel: Setting Kernel Arguments",
   	       clSetKernelArg(ker,i,inputSize[i],(void*) va_arg(list,void*)));
 
   va_end(list);
 }
 
-void kernel::setArg(int pos,void* arg){
+void ocl_kernel::setArg(int pos,void* arg){
   if(pos >= inputs || pos < 0)
-    printError("Kernel: Incorrect Kernel Argument Position",15);
-  printError("Kernel: Setting Kernel Arguments",
+    printError("OCL_Kernel: Incorrect Kernel Argument Position",15);
+  printError("OCL_Kernel: Setting Kernel Arguments",
 	     clSetKernelArg(ker,pos,inputSize[pos],arg));
 }
 
-string kernel::getArgType(int pos){
+string ocl_kernel::getArgType(int pos){
   if(pos >= inputs || pos < 0)
-    printError("Kernel: Incorrect Kernel Argument Position",15);    
+    printError("OCL_Kernel: Incorrect Kernel Argument Position",15);    
   return inputType[pos];
 }
 
-void kernel::run(){
+void ocl_kernel::run(){
   const size_t a = items;
   const size_t b = groups;
-  printError("Kernel: Kernel Run",
-	     clEnqueueNDRangeKernel(*(dev->getCommandQueue()),ker,1,NULL,&a,&b,0,NULL,NULL));  
+  printError("OCL_Kernel: Kernel Run",
+	     clEnqueueNDRangeKernel(dev->getCommandQueue(),ker,1,NULL,&a,&b,0,NULL,NULL));  
 }
 
-void kernel::run(size_t g,size_t i){
+void ocl_kernel::run(size_t g,size_t i){
   groups = g;
   items = i;
   run();
 }
 
-cl_kernel kernel::getKernel(){
+cl_kernel ocl_kernel::getKernel(){
   return ker;
 }
 
-void kernel::setKernel(cl_kernel k){
+void ocl_kernel::setKernel(cl_kernel k){
   ker = k;
 }
 
-cl_program kernel::getProgram(){
+cl_program ocl_kernel::getProgram(){
   return program;
 }
 
-void kernel::setProgram(cl_program p){
+void ocl_kernel::setProgram(cl_program p){
   program = p;
 }
 
-string kernel::getName(){
+string ocl_kernel::getName(){
   return name;
 }
 
-void kernel::setName(string n){
+void ocl_kernel::setName(string n){
   name = n;
 }
 
-string kernel::getFunction(){
+string ocl_kernel::getFunction(){
   return function;
 }
 
-void kernel::setFunction(string f){
+void ocl_kernel::setFunction(string f){
   function = f;
 }
  
-string kernel::getFlags(){
+string ocl_kernel::getFlags(){
   return flags;
 }
 
-void kernel::setFlags(string f){
+void ocl_kernel::setFlags(string f){
   flags = f;
 }  
 
 //-----------------------------//
-//           DEVICE            //
+//         OCL_DEVICE          //
 //-----------------------------//
-device::device(){
-  p = NULL;
-  d = NULL;
-  c = NULL;
-  cq = NULL;
+ocl_device::ocl_device(){
+  pID = NULL;
+  dID = NULL;
+  context = new ocl_context[1];
+  commandQueue = new ocl_commandQueue[1];
 }
 
-device::device(cl_platform_id p2,cl_device_id d2){
-  p = p2; 
-  d = d2;
+ocl_device::ocl_device(const ocl_device& d){
+  pID = d.pID; 
+  dID = d.dID; 
+  if(context == NULL){
+    context = new ocl_context[1];
+    commandQueue = new ocl_commandQueue[1];
+  }
+  *context = *d.context;
+  *commandQueue = *d.commandQueue;
+}
+
+ocl_device::ocl_device(cl_platform_id p,cl_device_id d){
+  pID = p;
+  dID = d;
+  if(context == NULL){
+    context = new ocl_context[1];
+    commandQueue = new ocl_commandQueue[1];
+  }
   refresh();
 }
 
-device::~device(){
-  clReleaseCommandQueue(cq);
-  clReleaseContext(c);
+ocl_device::~ocl_device(){
+  delete[] context;
+  delete[] commandQueue;
 }
 
-void device::refresh(){
-  cl_int err;
-  c = clCreateContext(NULL,1,&d,NULL,NULL,&err);
-  printError("Device: Creating Context",err);
-  cq = clCreateCommandQueue(c,d,0,&err);
-  printError("Device: Creating Command Queue",err);
+ocl_device& ocl_device::operator=(const ocl_device& d){
+  pID = d.pID; 
+  dID = d.dID; 
+  if(context == NULL){
+    context = new ocl_context[1];
+    commandQueue = new ocl_commandQueue[1];
+  }
+  *context = *d.context;
+  *commandQueue = *d.commandQueue;
+  return *this;
 }
 
-ocl_mem device::malloc(size_t s){
+void ocl_device::refresh(){
+  context->create(&dID);
+  commandQueue->create(context->getContext(),dID);
+}
+
+ocl_mem ocl_device::malloc(size_t s){
   cl_int err;
-  cl_mem mem = clCreateBuffer(c, CL_MEM_READ_WRITE , s, NULL, &err);
-  printError("Device: Malloc",err);
+  cl_mem mem = clCreateBuffer(context->getContext(), CL_MEM_READ_WRITE , s, NULL, &err);
+  printError("OCL_Device: Malloc",err);
   return ocl_mem(this,mem,s);
 }
 
-ocl_mem device::malloc(size_t s,cl_mem_flags f){
+ocl_mem ocl_device::malloc(size_t s,cl_mem_flags f){
   cl_int err;
-  cl_mem mem = clCreateBuffer(c, f, s, NULL, &err);
-  printError("Device: Malloc",err);
+  cl_mem mem = clCreateBuffer(context->getContext(), f, s, NULL, &err);
+  printError("OCL_Device: Malloc",err);
   return ocl_mem(this,mem,s);
 }
 
-void device::finish(){
-  clFinish(cq);
+void ocl_device::finish(){
+  commandQueue->finish();
 }
 
-void device::flush(){
-  clFlush(cq);
+void ocl_device::flush(){
+  commandQueue->flush();
 }
 
-cl_platform_id* device::getPlatform(){
-  return &p;
+cl_platform_id ocl_device::getPlatformID(){
+  return pID;
 }
 
-void device::setPlatform(cl_platform_id p2){
-  p = p2;
+void ocl_device::setPlatformID(cl_platform_id p){
+  pID = p;
 }
 
-cl_device_id* device::getDevice(){
-  return &d;
+cl_device_id ocl_device::getDeviceID(){
+  return dID;
 }
 
-void device::setDevice(cl_device_id d2){
-  d = d2;
+void ocl_device::setDeviceID(cl_device_id d){
+  dID = d;
 }
 
-cl_context* device::getContext(){
-  return &c;
+cl_context ocl_device::getContext(){
+  return context->getContext();
 }
 
-void device::setContext(cl_context& c2){
-  c = c2;
+cl_command_queue ocl_device::getCommandQueue(){
+  return commandQueue->getCommandQueue();
 }
 
-cl_command_queue* device::getCommandQueue(){
-  return &cq;
+//-----------------------------//
+//         OCL_CONTEXT         //
+//-----------------------------//
+  
+ocl_context::ocl_context(){
+  allocs = new int[1];
+  allocs[0] = 1;
 }
 
-void device::setCommandQueue(cl_command_queue& cq2){
-  cq = cq2;
+ocl_context::ocl_context(const ocl_context& c){
+  if(allocs == NULL)
+    allocs = c.allocs;
+  else if(allocs[0] > 1){
+    allocs[0]--;
+    allocs = c.allocs;
+  }
+  else{
+    delete[] allocs;
+    allocs = c.allocs;
+    clReleaseContext(context);
+  }
+
+  allocs[0]++;
+  context = c.context;
+}
+
+ocl_context::~ocl_context(){
+  if(allocs[0] > 1)
+    allocs[0]--;
+  else{
+    delete[] allocs;
+    clReleaseContext(context);
+  }
+}
+
+ocl_context& ocl_context::operator=(const ocl_context& c){
+  if(allocs == NULL)
+    allocs = c.allocs;
+  else if(allocs[0] > 1){
+    allocs[0]--;
+    allocs = c.allocs;
+  }
+  else{
+    delete[] allocs;
+    allocs = c.allocs;
+    clReleaseContext(context);
+  }
+
+  allocs[0]++;
+  context = c.context;  
+  return *this;
+}
+
+void ocl_context::create(cl_device_id* dID){
+  cl_int err;
+  context = clCreateContext(NULL,1,dID,NULL,NULL,&err);
+  printError("OCL_Context: Creating Context",err);
+}
+
+cl_context ocl_context::getContext(){
+  return context;
+}
+
+//-----------------------------//
+//      OCL_COMMANDQUEUE       //
+//-----------------------------//
+ 
+ocl_commandQueue::ocl_commandQueue(){
+  allocs = new int[1];
+  allocs[0] = 1;
+}
+
+ocl_commandQueue::ocl_commandQueue(const ocl_commandQueue& cq){
+  if(allocs == NULL)
+    allocs = cq.allocs;
+  else if(allocs[0] > 1){
+    allocs[0]--;
+    allocs = cq.allocs;
+  }
+  else{
+    delete[] allocs;
+    allocs = cq.allocs;
+    clReleaseCommandQueue(commandQueue);
+  }
+
+  allocs[0]++;
+  commandQueue = cq.commandQueue;
+}
+
+ocl_commandQueue::~ocl_commandQueue(){
+  if(allocs[0] > 1)
+    allocs[0]--;
+  else{
+    delete[] allocs;
+    clReleaseCommandQueue(commandQueue);
+  }
+}
+
+ocl_commandQueue& ocl_commandQueue::operator=(const ocl_commandQueue& cq){
+  if(allocs == NULL)
+    allocs = cq.allocs;
+  else if(allocs[0] > 1){
+    allocs[0]--;
+    allocs = cq.allocs;
+  }
+  else{
+    delete[] allocs;
+    allocs = cq.allocs;
+    clReleaseCommandQueue(commandQueue);
+  }
+
+  allocs[0]++;
+  commandQueue = cq.commandQueue;  
+  return *this;
+}
+
+void ocl_commandQueue::create(cl_context context,cl_device_id dID){
+  cl_int err;
+  commandQueue = clCreateCommandQueue(context,dID,0,&err);
+  printError("OCL_CommandQueue: Creating Command Queue",err);
+}
+
+void ocl_commandQueue::finish(){
+  clFinish(commandQueue);
+}
+
+void ocl_commandQueue::flush(){
+  clFlush(commandQueue);
+}
+
+cl_command_queue ocl_commandQueue::getCommandQueue(){
+  return commandQueue;
 }
 
 //-----------------------------//
@@ -582,67 +792,80 @@ void device::setCommandQueue(cl_command_queue& cq2){
 //-----------------------------//
 
 ocl_mem::ocl_mem(){
-  d = NULL;
-  m = NULL;
-  s = -1;
+  device = NULL;
+  memory = NULL;
+  size   = -1;
 }
 
-ocl_mem::ocl_mem(device* d2,cl_mem m2,size_t s2){
-  d = d2;
-  m = m2;
-  s = s2;
+ocl_mem::ocl_mem(const ocl_mem& m){
+  device = m.device;
+  memory = m.memory;
+  size   = m.size;
+}
+
+ocl_mem::ocl_mem(ocl_device* d,cl_mem m,size_t s){
+  device = d;
+  memory = m;
+  size   = s;
 }
 
 ocl_mem::~ocl_mem(){
-  if(s >= 0)
-    clReleaseMemObject(m);
+  if(size >= 0)
+    clReleaseMemObject(memory);
+}
+
+ocl_mem& ocl_mem::operator=(const ocl_mem& m){
+  device = m.device;
+  memory = m.memory;
+  size   = m.size;
+  return *this;
 }
 
 void ocl_mem::free(){
-  if(s >= 0){
-    clReleaseMemObject(m);
-    s = -1;
+  if(size >= 0){
+    clReleaseMemObject(memory);
+    size = -1;
   }
 }
 
 void ocl_mem::copyTo(void* v){
-  clEnqueueReadBuffer(*(*d).getCommandQueue(), m, CL_TRUE, 0, s, v,0,NULL,NULL);  
+  clEnqueueReadBuffer(device->getCommandQueue(), memory, CL_TRUE, 0, size, v,0,NULL,NULL);  
 }
 
-void ocl_mem::copyTo(void* v,size_t offset,size_t size){
-  clEnqueueReadBuffer(*(*d).getCommandQueue(), m, CL_TRUE, offset, size, v,0,NULL,NULL);  
+void ocl_mem::copyTo(void* v,size_t offset,size_t s){
+  clEnqueueReadBuffer(device->getCommandQueue(), memory, CL_TRUE, offset, s, v,0,NULL,NULL);  
 }
 
 void ocl_mem::copyToNB(void* v){
-  clEnqueueReadBuffer(*(*d).getCommandQueue(), m, CL_FALSE, 0, s, v,0,NULL,NULL);  
+  clEnqueueReadBuffer(device->getCommandQueue(), memory, CL_FALSE, 0, size, v,0,NULL,NULL);  
 }
 
-void ocl_mem::copyToNB(void* v,size_t offset,size_t size){
-  clEnqueueReadBuffer(*(*d).getCommandQueue(), m, CL_FALSE, offset, size, v,0,NULL,NULL);  
+void ocl_mem::copyToNB(void* v,size_t offset,size_t s){
+  clEnqueueReadBuffer(device->getCommandQueue(), memory, CL_FALSE, offset, s, v,0,NULL,NULL);  
 }
 
 void ocl_mem::copyFrom(void* v){
-  clEnqueueWriteBuffer(*(*d).getCommandQueue(), m , CL_TRUE, 0, s, v, 0, NULL, NULL);
+  clEnqueueWriteBuffer(device->getCommandQueue(), memory, CL_TRUE, 0, size, v, 0, NULL, NULL);
 }
 
-void ocl_mem::copyFrom(void* v,size_t offset,size_t size){
-  clEnqueueWriteBuffer(*(*d).getCommandQueue(), m, CL_TRUE, offset, size, v,0,NULL,NULL);  
+void ocl_mem::copyFrom(void* v,size_t offset,size_t s){
+  clEnqueueWriteBuffer(device->getCommandQueue(), memory, CL_TRUE, offset, s, v,0,NULL,NULL);  
 }
 
 void ocl_mem::copyFromNB(void* v){
-  clEnqueueWriteBuffer(*(*d).getCommandQueue(), m , CL_FALSE, 0, s, v, 0, NULL, NULL);
+  clEnqueueWriteBuffer(device->getCommandQueue(), memory, CL_FALSE, 0, size, v, 0, NULL, NULL);
 }
 
-void ocl_mem::copyFromNB(void* v,size_t offset,size_t size){
-  clEnqueueWriteBuffer(*(*d).getCommandQueue(), m, CL_FALSE, offset, size, v,0,NULL,NULL);  
+void ocl_mem::copyFromNB(void* v,size_t offset,size_t s){
+  clEnqueueWriteBuffer(device->getCommandQueue(), memory, CL_FALSE, offset, s, v,0,NULL,NULL);  
 }
 
 cl_mem* ocl_mem::mem(){
-  return &m;
+  return &memory;
 }
 
 size_t ocl_mem::getSize(){
-  return s;
+  return size;
 }
 
 #endif

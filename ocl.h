@@ -5,11 +5,13 @@
 #include <vector>
 #include <CL/cl.h>
 
-class kernel;
-class device;
+class ocl_kernel;
+class ocl_device;
 class ocl_mem;
+class ocl_context;
+class ocl_commandQueue;
 
-class oclSetup{
+class ocl_setup{
  private:
   std::string shortInfo,longInfo,question1,question2;
 
@@ -21,19 +23,21 @@ class oclSetup{
   cl_int err;
 
  public:
-  oclSetup();
-  ~oclSetup();
+  ocl_setup();
+  ocl_setup(const ocl_setup&);
+  ~ocl_setup();
+  ocl_setup& operator=(const ocl_setup&);
   void findDevices();
   void findDeviceInformation();
-  device displayDevices();
-  device getDevice(int,int);
+  ocl_device displayDevices();
+  ocl_device getDevice(int,int);
   cl_platform_id getPlatformID(int);
   cl_device_id getDeviceID(int,int);
 };
 
-class kernel{
+class ocl_kernel{
  private:
-  device* dev;
+  ocl_device* dev;
 
   std::string flags;
 
@@ -50,11 +54,13 @@ class kernel{
   int groups,items;
 
  public:
-  kernel();
-  kernel(device*,std::string);
-  kernel(device*,std::string,std::string);
-  ~kernel();
-  void setup(device*,std::string);
+  ocl_kernel();
+  ocl_kernel(const ocl_kernel&);
+  ocl_kernel(ocl_device*,std::string);
+  ocl_kernel(ocl_device*,std::string,std::string);
+  ~ocl_kernel();
+  ocl_kernel& operator=(const ocl_kernel&);
+  void setup(ocl_device*,std::string);
   void getKernelInformation(std::string);
   int sizeofType(std::string);
   void setArgs(void*,...);
@@ -75,44 +81,74 @@ class kernel{
   void setFlags(std::string);  
 };
 
-class device{
+class ocl_device{
  private:
-  cl_platform_id p;
-  cl_device_id   d;  
+  cl_platform_id pID;
+  cl_device_id   dID;  
 
-  cl_context c;
-  cl_command_queue cq;
+  ocl_context* context;
+  ocl_commandQueue* commandQueue;
 
  public:
-  device();
-  device(cl_platform_id,cl_device_id);
-  ~device();
+  ocl_device();
+  ocl_device(const ocl_device&);
+  ocl_device(cl_platform_id,cl_device_id);
+  ~ocl_device();
+  ocl_device& operator=(const ocl_device&);
   void refresh();
   ocl_mem malloc(size_t);
   ocl_mem malloc(size_t,cl_mem_flags);
   void finish();
   void flush();
-  cl_platform_id* getPlatform();
-  void setPlatform(cl_platform_id);
-  cl_device_id* getDevice();
-  void setDevice(cl_device_id);
-  cl_context* getContext();
-  void setContext(cl_context&);
-  cl_command_queue* getCommandQueue();
-  void setCommandQueue(cl_command_queue&);
+  cl_platform_id getPlatformID();
+  void setPlatformID(cl_platform_id);
+  cl_device_id getDeviceID();
+  void setDeviceID(cl_device_id);
+  cl_context getContext();
+  cl_command_queue getCommandQueue();
+};
+
+class ocl_context{
+ private:
+  int* allocs;
+  cl_context context;
+ public:
+  ocl_context();
+  ocl_context(const ocl_context&);
+  ~ocl_context();
+  ocl_context& operator=(const ocl_context&);
+  void create(cl_device_id*);
+  cl_context getContext();
+};
+
+class ocl_commandQueue{
+ private:
+  int* allocs;
+  cl_command_queue commandQueue;
+ public:
+  ocl_commandQueue();
+  ocl_commandQueue(const ocl_commandQueue&);
+  ~ocl_commandQueue();
+  ocl_commandQueue& operator=(const ocl_commandQueue&);
+  void create(cl_context context,cl_device_id dID);
+  cl_command_queue getCommandQueue();
+  void finish();
+  void flush();
 };
 
 class ocl_mem{
  private:
-  device* d;
-  cl_mem m;
-  size_t s;
+  ocl_device* device;
+  cl_mem memory;
+  size_t size;
 
  public:
   ocl_mem();
-  ocl_mem(device*,cl_mem);
-  ocl_mem(device*,cl_mem,size_t);
+  ocl_mem(const ocl_mem&);
+  ocl_mem(ocl_device*,cl_mem);
+  ocl_mem(ocl_device*,cl_mem,size_t);
   ~ocl_mem();
+  ocl_mem& operator=(const ocl_mem&);
   void copyTo(void*);
   void copyTo(void*,size_t,size_t);
   void copyToNB(void*);
