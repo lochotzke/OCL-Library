@@ -138,6 +138,7 @@ class ocl_commandQueue{
 
 class ocl_mem{
  private:
+  int* allocs;
   ocl_device* device;
   cl_mem memory;
   size_t size;
