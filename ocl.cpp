@@ -29,6 +29,8 @@ Note:
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <vector>
+
 #include <stdarg.h>
 #include <CL/cl.h>
 #include "ocl.h"
@@ -232,6 +234,14 @@ device oclSetup::getDevice(int p,int d){
   return device(pID[p],dID[p][d]);
 }
 
+cl_platform_id oclSetup::getPlatformID(int p){
+  return pID[p];
+}
+
+cl_device_id oclSetup::getDeviceID(int p,int d){
+  return dID[p][d];
+} 
+
 //-----------------------------//
 //           KERNEL            //
 //-----------------------------//
@@ -251,9 +261,6 @@ kernel::~kernel(){
   if(!function.compare(""))
     return;
 
-  for(int i=0;i<inputs;i++)    
-    delete[] inputType[i]; 
-  delete[] inputType;
   delete[] inputSize;
   clReleaseKernel(ker);
   clReleaseProgram(program);
@@ -290,7 +297,7 @@ void kernel::setup(device* d,string str){
   err = clBuildProgram(program,1,dev->getDevice(),flags.c_str(),NULL,NULL);
   printError("Kernel: Building Program",err);
 
-  #if OCL_OUTPUT_BUILD_LOG
+#if OCL_OUTPUT_BUILD_LOG
   char* log;
   size_t logSize;
 
@@ -299,11 +306,10 @@ void kernel::setup(device* d,string str){
   err = clGetProgramBuildInfo(program, *(dev->getDevice()), CL_PROGRAM_BUILD_LOG, logSize, log, NULL);  
   log[logSize] = '\0';
 
-  if(logSize > 2)
-    cout << "Build Log:\n\t" << log;
+  cout << "Build Log:\n\t" << log;
 
   delete[] log;
-  #endif
+#endif
 
   ker = clCreateKernel(program,name.c_str(),&err);
   printError("Kernel: Creating Kernel",err);
@@ -340,8 +346,8 @@ void kernel::getKernelInformation(string str){
   }
   inputs++;
   
-  int* pointer = new int[inputs,sizeof(int)]();
-  inputType = new char*[inputs*sizeof(char*)];
+  int* pointer = new int[inputs*sizeof(int)]();
+  inputType.resize(inputs);
   inputSize = new int[inputs*sizeof(int)];
   int pos = start+1;
 
@@ -363,23 +369,17 @@ void kernel::getKernelInformation(string str){
 
   for(int i=0;i<inputs;i++){
     if(pointer[i]){
-      inputType[i] = new char[6*sizeof(char)];
-      (ocl::type[6]).copy(inputType[i],6,0);
-      inputType[i][6] = '\0';
-
+      inputType[i] = ocl::type[6];
       inputSize[i] = sizeofType("cl_mem");
     }
     else{
       pos = inputSize[i];
 
-      while(dm.find(str[pos],0) == string::npos)
+      while(dm.find(str[pos],0) == string::npos){
 	pos--;
-
-      inputType[i] = new char[(inputSize[i]-pos)*sizeof(char)];
-
-      str.copy(inputType[i],inputSize[i]-pos,pos+1);
-      inputType[i][inputSize[i]-pos] = '\0';
-
+      }      
+      
+      inputType[i] = str.substr(pos+1,inputSize[i]-pos);
       inputSize[i] = sizeofType(inputType[i]);
     }
   }
@@ -433,6 +433,12 @@ void kernel::setArg(int pos,void* arg){
     printError("Kernel: Incorrect Kernel Argument Position",15);
   printError("Kernel: Setting Kernel Arguments",
 	     clSetKernelArg(ker,pos,inputSize[pos],arg));
+}
+
+string kernel::getArgType(int pos){
+  if(pos >= inputs || pos < 0)
+    printError("Kernel: Incorrect Kernel Argument Position",15);    
+  return inputType[pos];
 }
 
 void kernel::run(){
@@ -559,7 +565,7 @@ cl_context* device::getContext(){
   return &c;
 }
 
-void device::setContext(cl_context c2){
+void device::setContext(cl_context& c2){
   c = c2;
 }
 
@@ -567,7 +573,7 @@ cl_command_queue* device::getCommandQueue(){
   return &cq;
 }
 
-void device::setCommandQueue(cl_command_queue cq2){
+void device::setCommandQueue(cl_command_queue& cq2){
   cq = cq2;
 }
 

@@ -2,6 +2,7 @@
 #define OCL_SETUP_H
 
 #include <iostream>
+#include <vector>
 #include <CL/cl.h>
 
 class kernel;
@@ -26,6 +27,8 @@ class oclSetup{
   void findDeviceInformation();
   device displayDevices();
   device getDevice(int,int);
+  cl_platform_id getPlatformID(int);
+  cl_device_id getDeviceID(int,int);
 };
 
 class kernel{
@@ -42,7 +45,7 @@ class kernel{
 
   int inputs;
   int* inputSize;
-  char** inputType;
+  std::vector<std::string> inputType;
 
   int groups,items;
 
@@ -56,6 +59,7 @@ class kernel{
   int sizeofType(std::string);
   void setArgs(void*,...);
   void setArg(int,void*);
+  std::string getArgType(int);
   void setDims(size_t,size_t);
   void run();
   void run(size_t,size_t);
@@ -93,9 +97,9 @@ class device{
   cl_device_id* getDevice();
   void setDevice(cl_device_id);
   cl_context* getContext();
-  void setContext(cl_context);
+  void setContext(cl_context&);
   cl_command_queue* getCommandQueue();
-  void setCommandQueue(cl_command_queue);
+  void setCommandQueue(cl_command_queue&);
 };
 
 class ocl_mem{
