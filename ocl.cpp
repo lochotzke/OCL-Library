@@ -248,6 +248,9 @@ kernel::kernel(device* d,string str,string fstr){
 }
 
 kernel::~kernel(){
+  if(!function.compare(""))
+    return;
+
   for(int i=0;i<inputs;i++)    
     delete[] inputType[i]; 
   delete[] inputType;
