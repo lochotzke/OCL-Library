@@ -569,8 +569,8 @@ void ocl_kernel::setFlags(string f){
 ocl_device::ocl_device(){
   pID = NULL;
   dID = NULL;
-  context = new ocl_context[1];
-  commandQueue = new ocl_commandQueue[1];
+  context = new ocl_context[1]();
+  commandQueue = new ocl_commandQueue[1]();
 }
 
 ocl_device::ocl_device(const ocl_device& d){
@@ -587,10 +587,8 @@ ocl_device::ocl_device(const ocl_device& d){
 ocl_device::ocl_device(cl_platform_id p,cl_device_id d){
   pID = p;
   dID = d;
-  if(context == NULL){
-    context = new ocl_context[1];
-    commandQueue = new ocl_commandQueue[1];
-  }
+  context = new ocl_context[1]();
+  commandQueue = new ocl_commandQueue[1]();
   refresh();
 }
 
