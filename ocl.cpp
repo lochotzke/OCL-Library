@@ -1,12 +1,19 @@
+//--------------------------------------------------------------------//
+//   Copyright (c) 2012, David Medina                                 //
+//   All rights reserved.                                             //
+//   License Located in:                                              //
+//      https://github.com/dmed256/OCL-Library/blob/master/LICENSE    //
+//--------------------------------------------------------------------//
+
 #ifndef OCL_SETUP_C
 #define OCL_SETUP_C
 
 /* 
-|----------------------+-------------------------|
-| VARIABLE             |  DESCRIPTION            |
-|----------------------+-------------------------|
-| OCL_OUTPUT_BUILD_LOG | Outputs Build Log       |
-|----------------------+-------------------------|
+//----------------------+-------------------------//
+// VARIABLE             |  DESCRIPTION            //
+//----------------------+-------------------------//
+// OCL_OUTPUT_BUILD_LOG | Outputs Build Log       //
+//----------------------+-------------------------//
 
 Note:
    Valgrind shows memory leaks due to the follwing OpenCL functions hiding memory movement:
@@ -297,9 +304,11 @@ ocl_kernel::ocl_kernel(ocl_device* d,string str,string fstr){
 }
 
 ocl_kernel::~ocl_kernel(){
-  delete[] inputSize;
-  clReleaseKernel(ker);
-  clReleaseProgram(program);
+  if(function.compare("")){
+    delete[] inputSize;
+    clReleaseKernel(ker);
+    clReleaseProgram(program);
+  }
 }
 
 ocl_kernel& ocl_kernel::operator=(const ocl_kernel& k){
@@ -560,8 +569,8 @@ void ocl_kernel::setFlags(string f){
 ocl_device::ocl_device(){
   pID = NULL;
   dID = NULL;
-  context = new ocl_context[1];
-  commandQueue = new ocl_commandQueue[1];
+  context = new ocl_context[1]();
+  commandQueue = new ocl_commandQueue[1]();
 }
 
 ocl_device::ocl_device(const ocl_device& d){
@@ -578,10 +587,8 @@ ocl_device::ocl_device(const ocl_device& d){
 ocl_device::ocl_device(cl_platform_id p,cl_device_id d){
   pID = p;
   dID = d;
-  if(context == NULL){
-    context = new ocl_context[1];
-    commandQueue = new ocl_commandQueue[1];
-  }
+  context = new ocl_context[1]();
+  commandQueue = new ocl_commandQueue[1]();
   refresh();
 }
 
@@ -792,29 +799,65 @@ cl_command_queue ocl_commandQueue::getCommandQueue(){
 //-----------------------------//
 
 ocl_mem::ocl_mem(){
+  allocs = new int[1];
+  allocs[0] = 1;
+
   device = NULL;
   memory = NULL;
   size   = -1;
 }
 
 ocl_mem::ocl_mem(const ocl_mem& m){
+  if(allocs == NULL)
+    allocs = m.allocs;
+  else if(allocs[0] > 1){
+    allocs[0]--;
+    allocs = m.allocs;
+  }
+  else{
+    delete[] allocs;
+    allocs = m.allocs;
+    clReleaseMemObject(memory);
+  }
+
+  allocs[0]++;
   device = m.device;
   memory = m.memory;
   size   = m.size;
 }
 
 ocl_mem::ocl_mem(ocl_device* d,cl_mem m,size_t s){
+  allocs = new int[1];
+  allocs[0] = 1;
+
   device = d;
   memory = m;
   size   = s;
 }
 
 ocl_mem::~ocl_mem(){
-  if(size >= 0)
+  if(allocs[0] > 1)
+    allocs[0]--;
+  else{
+    delete[] allocs;
     clReleaseMemObject(memory);
+  }
 }
 
 ocl_mem& ocl_mem::operator=(const ocl_mem& m){
+  if(allocs == NULL)
+    allocs = m.allocs;
+  else if(allocs[0] > 1){
+    allocs[0]--;
+    allocs = m.allocs;
+  }
+  else{
+    delete[] allocs;
+    allocs = m.allocs;
+    clReleaseMemObject(memory);
+  }
+
+  allocs[0]++;
   device = m.device;
   memory = m.memory;
   size   = m.size;
@@ -823,6 +866,7 @@ ocl_mem& ocl_mem::operator=(const ocl_mem& m){
 
 void ocl_mem::free(){
   if(size >= 0){
+    delete[] allocs;
     clReleaseMemObject(memory);
     size = -1;
   }

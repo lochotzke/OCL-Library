@@ -1,3 +1,10 @@
+//--------------------------------------------------------------------//
+//   Copyright (c) 2012, David Medina                                 //
+//   All rights reserved.                                             //
+//   License Located in:                                              //
+//      https://github.com/dmed256/OCL-Library/blob/master/LICENSE    //
+//--------------------------------------------------------------------//
+
 #ifndef OCL_SETUP_H
 #define OCL_SETUP_H
 
@@ -138,6 +145,7 @@ class ocl_commandQueue{
 
 class ocl_mem{
  private:
+  int* allocs;
   ocl_device* device;
   cl_mem memory;
   size_t size;
