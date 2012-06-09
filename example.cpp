@@ -1,18 +1,16 @@
 #include <iostream>
-#include <fstream>
-#include <streambuf>
 #include "ocl.h"
 
 using namespace std;
 int main(){
   // Get available devices and platforms
-  oclSetup o;
+  ocl_setup o;
 
-  // Get platform and device information and return the chosen one
-  device dev = o.displayDevices();
+  // Get device 3 from platform 1
+  ocl_device device = o.getDevice(1,3);
 
   // Create a kernel using the device above from vectoradd.cl
-  kernel k(&dev,"vectoradd.cl");
+  ocl_kernel kernel(&device,"vectoradd.cl");
 
   int N = 1024;
 
@@ -26,21 +24,21 @@ int main(){
     a[i] = i;
 
   // Allocate memory on the device
-  ocl_mem cl_a = dev.malloc(N*sizeof(float),CL_MEM_READ_ONLY);
-  ocl_mem cl_b = dev.malloc(N*sizeof(float),CL_MEM_READ_ONLY);
-  ocl_mem cl_c = dev.malloc(N*sizeof(float),CL_MEM_WRITE_ONLY);
+  ocl_mem cl_a = device.malloc(N*sizeof(float),CL_MEM_READ_ONLY);
+  ocl_mem cl_b = device.malloc(N*sizeof(float),CL_MEM_READ_ONLY);
+  ocl_mem cl_c = device.malloc(N*sizeof(float),CL_MEM_WRITE_ONLY);
   
   // Copy host variables a and b to the device variables cl_a and cl_b
   cl_a.copyFrom(a);
   cl_b.copyFrom(b);
 
   // Set the arguments required for the kernel
-  k.setArgs(&N,cl_a.mem(),cl_b.mem(),cl_c.mem());
+  kernel.setArgs(&N,cl_a.mem(),cl_b.mem(),cl_c.mem());
   // Execute using N-sized work-groups with a total of N work-items
-  k.run(N,N);
+  kernel.run(N,N);
     
   // Wait until the kernel is done executing
-  dev.finish();
+  device.finish();
 
   // Copy device variable cl_c to host variable c
   cl_c.copyTo(c);
