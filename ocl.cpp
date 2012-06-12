@@ -562,6 +562,14 @@ int ocl_kernel::getWarpSize(){
   return ret;
 }
 
+int ocl_kernel::getWavefrontSize(){
+  return getWarpSize();
+}
+
+int ocl_kernel::getGroupSize(int p){
+  return device->getGroupSize(p);
+}
+
 //-----------------------------//
 //         OCL_DEVICE          //
 //-----------------------------//
@@ -577,10 +585,14 @@ ocl_device::ocl_device(const ocl_device& d){
   dID = d.dID; 
   if(context == NULL){
     context = new ocl_context[1];
-    commandQueue = new ocl_commandQueue[1];
+    commandQueue = new ocl_commandQueue[1];    
+    groupSize = new int[3];
   }
   *context = *d.context;
   *commandQueue = *d.commandQueue;
+  groupSize[0] = d.groupSize[0];
+  groupSize[1] = d.groupSize[1];
+  groupSize[2] = d.groupSize[2];
 }
 
 ocl_device::ocl_device(cl_platform_id p,cl_device_id d){
@@ -588,6 +600,7 @@ ocl_device::ocl_device(cl_platform_id p,cl_device_id d){
   dID = d;
   context = new ocl_context[1]();
   commandQueue = new ocl_commandQueue[1]();
+  groupSize = new int[3];
   refresh();
 }
 
@@ -602,15 +615,26 @@ ocl_device& ocl_device::operator=(const ocl_device& d){
   if(context == NULL){
     context = new ocl_context[1];
     commandQueue = new ocl_commandQueue[1];
+    groupSize = new int[3];
   }
   *context = *d.context;
   *commandQueue = *d.commandQueue;
+  groupSize[0] = d.groupSize[0];
+  groupSize[1] = d.groupSize[1];
+  groupSize[2] = d.groupSize[2];
   return *this;
 }
 
 void ocl_device::refresh(){
   context->create(&dID);
   commandQueue->create(context->getContext(),dID);
+  size_t* tmp = new size_t[3];
+  printError("GET_MAX_WORK_ITEM_SIZES",
+	     clGetDeviceInfo(dID, CL_DEVICE_MAX_WORK_ITEM_SIZES, 3*sizeof(size_t), tmp, NULL));
+  groupSize[0] = tmp[0];
+  groupSize[1] = tmp[1];
+  groupSize[2] = tmp[2];
+  delete[] tmp;
 }
 
 ocl_mem ocl_device::malloc(size_t s){
@@ -654,6 +678,12 @@ cl_context ocl_device::getContext(){
 
 cl_command_queue ocl_device::getCommandQueue(){
   return commandQueue->getCommandQueue();
+}
+
+int ocl_device::getGroupSize(int p){
+  if(p < 0 || 2 < p)
+    printError("OCL_DEVICE: Getting group size",15);
+  return groupSize[p];
 }
 
 //-----------------------------//

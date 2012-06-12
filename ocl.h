@@ -85,6 +85,8 @@ class ocl_kernel{
   std::string getFlags();
   void setFlags(std::string);  
   int getWarpSize();
+  int getWavefrontSize();
+  int getGroupSize(int);
 };
 
 class ocl_device{
@@ -94,6 +96,8 @@ class ocl_device{
 
   ocl_context* context;
   ocl_commandQueue* commandQueue;
+
+  int* groupSize;
 
  public:
   ocl_device();
@@ -111,6 +115,7 @@ class ocl_device{
   cl_device_id getDeviceID();
   cl_context getContext();
   cl_command_queue getCommandQueue();
+  int getGroupSize(int);
 };
 
 class ocl_context{
