@@ -74,7 +74,7 @@ void printError(std::string s,int error){
     error = error < 0  ? error : -error;
     error = error < 65 ? error : 15;
     std::cout << s << " Error: " << error << '\n'
-	      << "OpenCL Error: " << ocl::error[-error];
+	      << "OpenCL Error: " << ocl::error[-error] << endl;
     throw 1;
   }
 }
