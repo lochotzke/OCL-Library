@@ -554,6 +554,14 @@ void ocl_kernel::setFlags(string f){
   flags = f;
 }  
 
+int ocl_kernel::getWarpSize(){
+  size_t ret;
+  printError("OCL_DEVICE: Getting Warp Size",
+	     clGetKernelWorkGroupInfo(kernel,device->getDeviceID(),CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE,
+				      sizeof(size_t),&ret,NULL));
+  return ret;
+}
+
 //-----------------------------//
 //         OCL_DEVICE          //
 //-----------------------------//

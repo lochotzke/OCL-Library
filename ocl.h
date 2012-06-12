@@ -84,6 +84,7 @@ class ocl_kernel{
   void setFunction(std::string);
   std::string getFlags();
   void setFlags(std::string);  
+  int getWarpSize();
 };
 
 class ocl_device{
