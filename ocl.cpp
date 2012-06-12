@@ -281,9 +281,9 @@ cl_device_id ocl_setup::getDeviceID(int p,int d){
 ocl_kernel::ocl_kernel(){}
 
 ocl_kernel::ocl_kernel(const ocl_kernel& k){
-  dev = k.dev;
+  device = k.device;
   flags = k.flags;
-  ker = k.ker;
+  kernel = k.kernel;
   program = k.program;
   name = k.name;
   function = k.function;
@@ -306,15 +306,15 @@ ocl_kernel::ocl_kernel(ocl_device* d,string str,string fstr){
 ocl_kernel::~ocl_kernel(){
   if(function.compare("")){
     delete[] inputSize;
-    clReleaseKernel(ker);
+    clReleaseKernel(kernel);
     clReleaseProgram(program);
   }
 }
 
 ocl_kernel& ocl_kernel::operator=(const ocl_kernel& k){
-  dev = k.dev;
+  device = k.device;
   flags = k.flags;
-  ker = k.ker;
+  kernel = k.kernel;
   program = k.program;
   name = k.name;
   function = k.function;
@@ -327,7 +327,7 @@ ocl_kernel& ocl_kernel::operator=(const ocl_kernel& k){
 }
 
 void ocl_kernel::setup(ocl_device* d,string str){
-  dev = d;
+  device = d;
   cl_int err;
 
   if(ifstream(str.c_str())){
@@ -350,9 +350,9 @@ void ocl_kernel::setup(ocl_device* d,string str){
 
   const char* cFunction = function.c_str();
   const size_t cLength = function.length();
-  cl_device_id dID = dev->getDeviceID();
+  cl_device_id dID = device->getDeviceID();
   
-  program = clCreateProgramWithSource(dev->getContext(),1,&cFunction,&cLength,&err);
+  program = clCreateProgramWithSource(device->getContext(),1,&cFunction,&cLength,&err);
   printError("OCL_Kernel ("+name+") : Constructing Program",err);
 
   err = clBuildProgram(program,1,&dID,flags.c_str(),NULL,NULL);
@@ -362,9 +362,9 @@ void ocl_kernel::setup(ocl_device* d,string str){
   char* log;
   size_t logSize;
 
-  err = clGetProgramBuildInfo(program, dev->getDeviceID(), CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);    
+  err = clGetProgramBuildInfo(program, device->getDeviceID(), CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);    
   log = new char[logSize];
-  err = clGetProgramBuildInfo(program, dev->getDeviceID(), CL_PROGRAM_BUILD_LOG, logSize, log, NULL);  
+  err = clGetProgramBuildInfo(program, device->getDeviceID(), CL_PROGRAM_BUILD_LOG, logSize, log, NULL);  
   log[logSize] = '\0';
 
   cout << "Build Log:\n\t" << log;
@@ -372,7 +372,7 @@ void ocl_kernel::setup(ocl_device* d,string str){
   delete[] log;
 #endif
 
-  ker = clCreateKernel(program,name.c_str(),&err);
+  kernel = clCreateKernel(program,name.c_str(),&err);
   printError("OCL_Kernel : Creating Kernel",err);
 }
 
@@ -487,12 +487,11 @@ void ocl_kernel::setDims(size_t g,size_t i){
 void ocl_kernel::setArgs(void* x,...){
   va_list list;
   va_start(list,x);
-  
   printError("OCL_Kernel ("+name+") : Setting Kernel Arguments",
-  	     clSetKernelArg(ker,0,inputSize[0],x));
+  	     clSetKernelArg(kernel,0,inputSize[0],x));
   for(int i=1;i<inputs;i++)
     printError("OCL_Kernel ("+name+") : Setting Kernel Arguments",
-  	       clSetKernelArg(ker,i,inputSize[i],(void*) va_arg(list,void*)));
+  	       clSetKernelArg(kernel,i,inputSize[i],(void*) va_arg(list,void*)));
 
   va_end(list);
 }
@@ -501,7 +500,7 @@ void ocl_kernel::setArg(int pos,void* arg){
   if(pos >= inputs || pos < 0)
     printError("OCL_Kernel ("+name+") : Incorrect Kernel Argument Position",15);
   printError("OCL_Kernel ("+name+") : Setting Kernel Arguments",
-	     clSetKernelArg(ker,pos,inputSize[pos],arg));
+	     clSetKernelArg(kernel,pos,inputSize[pos],arg));
 }
 
 string ocl_kernel::getArgType(int pos){
@@ -514,7 +513,7 @@ void ocl_kernel::run(){
   const size_t a = items;
   const size_t b = groups;
   printError("OCL_Kernel ("+name+") : Kernel Run",
-	     clEnqueueNDRangeKernel(dev->getCommandQueue(),ker,1,NULL,&a,&b,0,NULL,NULL));  
+	     clEnqueueNDRangeKernel(device->getCommandQueue(),kernel,1,NULL,&a,&b,0,NULL,NULL));  
 }
 
 void ocl_kernel::run(size_t g,size_t i){
@@ -524,11 +523,11 @@ void ocl_kernel::run(size_t g,size_t i){
 }
 
 cl_kernel ocl_kernel::getKernel(){
-  return ker;
+  return kernel;
 }
 
 void ocl_kernel::setKernel(cl_kernel k){
-  ker = k;
+  kernel = k;
 }
 
 cl_program ocl_kernel::getProgram(){
@@ -626,6 +625,11 @@ ocl_mem ocl_device::malloc(size_t s,cl_mem_flags f){
   cl_mem mem = clCreateBuffer(context->getContext(), f, s, NULL, &err);
   printError("OCL_Device: Malloc",err);
   return ocl_mem(this,mem,s);
+}
+
+void ocl_device::barrier(){
+  ///////////////////////////////////
+  //printError("OCL_Device: Malloc",clEnqueueBarrier(*commandQueue));
 }
 
 void ocl_device::finish(){

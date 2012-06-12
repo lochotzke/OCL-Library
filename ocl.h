@@ -44,11 +44,11 @@ class ocl_setup{
 
 class ocl_kernel{
  private:
-  ocl_device* dev;
+  ocl_device* device;
 
   std::string flags;
 
-  cl_kernel ker;
+  cl_kernel kernel;
   cl_program program;
   
   std::string name;
@@ -105,6 +105,7 @@ class ocl_device{
   void refresh();
   ocl_mem malloc(size_t);
   ocl_mem malloc(size_t,cl_mem_flags);
+  void barrier();
   void finish();
   void flush();
   cl_platform_id getPlatformID();
