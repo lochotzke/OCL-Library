@@ -77,9 +77,7 @@ class ocl_kernel{
   void run();
   void run(size_t,size_t);
   cl_kernel getKernel();
-  void setKernel(cl_kernel);
   cl_program getProgram();
-  void setProgram(cl_program);
   std::string getName();
   void setName(std::string);
   std::string getFunction();
@@ -109,9 +107,7 @@ class ocl_device{
   void finish();
   void flush();
   cl_platform_id getPlatformID();
-  void setPlatformID(cl_platform_id);
   cl_device_id getDeviceID();
-  void setDeviceID(cl_device_id);
   cl_context getContext();
   cl_command_queue getCommandQueue();
 };

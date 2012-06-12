@@ -526,16 +526,8 @@ cl_kernel ocl_kernel::getKernel(){
   return kernel;
 }
 
-void ocl_kernel::setKernel(cl_kernel k){
-  kernel = k;
-}
-
 cl_program ocl_kernel::getProgram(){
   return program;
-}
-
-void ocl_kernel::setProgram(cl_program p){
-  program = p;
 }
 
 string ocl_kernel::getName(){
@@ -644,16 +636,8 @@ cl_platform_id ocl_device::getPlatformID(){
   return pID;
 }
 
-void ocl_device::setPlatformID(cl_platform_id p){
-  pID = p;
-}
-
 cl_device_id ocl_device::getDeviceID(){
   return dID;
-}
-
-void ocl_device::setDeviceID(cl_device_id d){
-  dID = d;
 }
 
 cl_context ocl_device::getContext(){
