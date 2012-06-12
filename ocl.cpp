@@ -353,10 +353,10 @@ void ocl_kernel::setup(ocl_device* d,string str){
   cl_device_id dID = dev->getDeviceID();
   
   program = clCreateProgramWithSource(dev->getContext(),1,&cFunction,&cLength,&err);
-  printError("OCL_Kernel: Constructing Program",err);
+  printError("OCL_Kernel ("+name+") : Constructing Program",err);
 
   err = clBuildProgram(program,1,&dID,flags.c_str(),NULL,NULL);
-  printError("OCL_Kernel: Building Program",err);
+  printError("OCL_Kernel ("+name+") : Building Program",err);
 
 #if OCL_OUTPUT_BUILD_LOG
   char* log;
@@ -373,7 +373,7 @@ void ocl_kernel::setup(ocl_device* d,string str){
 #endif
 
   ker = clCreateKernel(program,name.c_str(),&err);
-  printError("OCL_Kernel: Creating Kernel",err);
+  printError("OCL_Kernel : Creating Kernel",err);
 }
 
 void ocl_kernel::getKernelInformation(string str){
@@ -385,7 +385,7 @@ void ocl_kernel::getKernelInformation(string str){
       throw 1;
     }
     catch(int i){
-      cout << "OCL_Kernel: Getting Kernel Information Error\n";
+      cout << "OCL_Kernel : Getting Kernel Information Error\n";
     }
   }
   
@@ -473,7 +473,7 @@ int ocl_kernel::sizeofType(string type){
 	throw 1;
       }
       catch(int i){
-	cout << "OCL_Kernel: Type <" << type << "> not found in oclInfo\n";
+	cout << "OCL_Kernel ("+name+") : Type <" << type << "> not found in oclInfo\n";
       }
     }
   }
@@ -488,10 +488,10 @@ void ocl_kernel::setArgs(void* x,...){
   va_list list;
   va_start(list,x);
   
-  printError("OCL_Kernel: Setting Kernel Arguments",
+  printError("OCL_Kernel ("+name+") : Setting Kernel Arguments",
   	     clSetKernelArg(ker,0,inputSize[0],x));
   for(int i=1;i<inputs;i++)
-    printError("OCL_Kernel: Setting Kernel Arguments",
+    printError("OCL_Kernel ("+name+") : Setting Kernel Arguments",
   	       clSetKernelArg(ker,i,inputSize[i],(void*) va_arg(list,void*)));
 
   va_end(list);
@@ -499,21 +499,21 @@ void ocl_kernel::setArgs(void* x,...){
 
 void ocl_kernel::setArg(int pos,void* arg){
   if(pos >= inputs || pos < 0)
-    printError("OCL_Kernel: Incorrect Kernel Argument Position",15);
-  printError("OCL_Kernel: Setting Kernel Arguments",
+    printError("OCL_Kernel ("+name+") : Incorrect Kernel Argument Position",15);
+  printError("OCL_Kernel ("+name+") : Setting Kernel Arguments",
 	     clSetKernelArg(ker,pos,inputSize[pos],arg));
 }
 
 string ocl_kernel::getArgType(int pos){
   if(pos >= inputs || pos < 0)
-    printError("OCL_Kernel: Incorrect Kernel Argument Position",15);    
+    printError("OCL_Kernel ("+name+") : Incorrect Kernel Argument Position",15);    
   return inputType[pos];
 }
 
 void ocl_kernel::run(){
   const size_t a = items;
   const size_t b = groups;
-  printError("OCL_Kernel: Kernel Run",
+  printError("OCL_Kernel ("+name+") : Kernel Run",
 	     clEnqueueNDRangeKernel(dev->getCommandQueue(),ker,1,NULL,&a,&b,0,NULL,NULL));  
 }
 
