@@ -103,15 +103,15 @@ void ocl_setup::findDevices(){
   cl_device_id dID2[maxD];
 
   clGetPlatformIDs(maxP, pID2, &pSize);	
-  pID = new cl_platform_id[pSize*sizeof(cl_platform_id)];
-  dID = new cl_device_id*[pSize*sizeof(cl_device_id*)];
-  dSize = new cl_uint[pSize*sizeof(cl_uint)];
+  pID = new cl_platform_id[pSize];
+  dID = new cl_device_id*[pSize];
+  dSize = new cl_uint[pSize];
 
   for(int i=0;i<pSize;i++){
     pID[i] = pID2[i];
 
     clGetDeviceIDs(pID[i],CL_DEVICE_TYPE_ALL, maxD, dID2, dSize+i);
-    dID[i] = new cl_device_id[dSize[i]*sizeof(cl_device_id)];
+    dID[i] = new cl_device_id[dSize[i]];
     for(int j=0;j<dSize[i];j++)
       dID[i][j] = dID2[j];
   }
@@ -278,7 +278,9 @@ cl_device_id ocl_setup::getDeviceID(int p,int d){
 //          OCL_KERNEL          //
 //-----------------------------//
 
-ocl_kernel::ocl_kernel(){}
+ocl_kernel::ocl_kernel(){
+  inputSize = NULL;
+}
 
 ocl_kernel::ocl_kernel(const ocl_kernel& k){
   device = k.device;
@@ -288,7 +290,12 @@ ocl_kernel::ocl_kernel(const ocl_kernel& k){
   name = k.name;
   function = k.function;
   inputs = k.inputs;
-  inputSize = k.inputSize;
+
+  if(inputSize == NULL)
+    inputSize = new int[inputs];
+  for(int i=0;i<inputs;i++)
+    inputSize[i] = k.inputSize[i];
+
   inputType = k.inputType;
   groups = k.groups;
   items = k.items;
@@ -319,7 +326,12 @@ ocl_kernel& ocl_kernel::operator=(const ocl_kernel& k){
   name = k.name;
   function = k.function;
   inputs = k.inputs;
-  inputSize = k.inputSize;
+
+  if(inputSize == NULL)
+    inputSize = new int[inputs];
+  for(int i=0;i<inputs;i++)
+    inputSize[i] = k.inputSize[i];
+
   inputType = k.inputType;
   groups = k.groups;
   items = k.items;
@@ -337,7 +349,7 @@ void ocl_kernel::setup(ocl_device* d,string str){
     int length = file.tellg();
     file.seekg(0,ios::beg);
   
-    char* tmp = new char[length*sizeof(char)];
+    char* tmp = new char[length];
     file.read(tmp,length);
 
     function = tmp;
@@ -411,9 +423,9 @@ void ocl_kernel::getKernelInformation(string str){
   }
   inputs++;
   
-  int* pointer = new int[inputs*sizeof(int)]();
+  int* pointer = new int[inputs]();
   inputType.resize(inputs);
-  inputSize = new int[inputs*sizeof(int)];
+  inputSize = new int[inputs];
   int pos = start+1;
 
   for(int i=0;i<inputs;i++){
@@ -576,21 +588,16 @@ int ocl_kernel::getGroupSize(int p){
 ocl_device::ocl_device(){
   pID = NULL;
   dID = NULL;
-  context = new ocl_context[1]();
-  commandQueue = new ocl_commandQueue[1]();
-  groupSize = new int[3];
+  groupSize = NULL;
 }
 
 ocl_device::ocl_device(const ocl_device& d){
   pID = d.pID; 
   dID = d.dID; 
-  if(context == NULL){
-    context = new ocl_context[1];
-    commandQueue = new ocl_commandQueue[1];    
+  if(groupSize == NULL)
     groupSize = new int[3];
-  }
-  *context = *d.context;
-  *commandQueue = *d.commandQueue;
+  context = d.context;
+  commandQueue = d.commandQueue;
   groupSize[0] = d.groupSize[0];
   groupSize[1] = d.groupSize[1];
   groupSize[2] = d.groupSize[2];
@@ -599,27 +606,23 @@ ocl_device::ocl_device(const ocl_device& d){
 ocl_device::ocl_device(cl_platform_id p,cl_device_id d){
   pID = p;
   dID = d;
-  context = new ocl_context[1]();
-  commandQueue = new ocl_commandQueue[1]();
   groupSize = new int[3];
   refresh();
 }
 
 ocl_device::~ocl_device(){
-  delete[] context;
-  delete[] commandQueue;
+  if(groupSize != NULL)
+    delete[] groupSize;
 }
 
 ocl_device& ocl_device::operator=(const ocl_device& d){
   pID = d.pID; 
   dID = d.dID; 
-  if(context == NULL){
-    context = new ocl_context[1];
-    commandQueue = new ocl_commandQueue[1];
+  if(groupSize == NULL)
     groupSize = new int[3];
-  }
-  *context = *d.context;
-  *commandQueue = *d.commandQueue;
+
+  context = d.context;
+  commandQueue = d.commandQueue;
   groupSize[0] = d.groupSize[0];
   groupSize[1] = d.groupSize[1];
   groupSize[2] = d.groupSize[2];
@@ -627,8 +630,8 @@ ocl_device& ocl_device::operator=(const ocl_device& d){
 }
 
 void ocl_device::refresh(){
-  context->create(&dID);
-  commandQueue->create(context->getContext(),dID);
+  context.create(&dID);
+  commandQueue.create(context.getContext(),dID);
   size_t* tmp = new size_t[3];
   printError("GET_MAX_WORK_ITEM_SIZES",
 	     clGetDeviceInfo(dID, CL_DEVICE_MAX_WORK_ITEM_SIZES, 3*sizeof(size_t), tmp, NULL));
@@ -640,14 +643,14 @@ void ocl_device::refresh(){
 
 ocl_mem ocl_device::malloc(size_t s){
   cl_int err;
-  cl_mem mem = clCreateBuffer(context->getContext(), CL_MEM_READ_WRITE , s, NULL, &err);
+  cl_mem mem = clCreateBuffer(context.getContext(), CL_MEM_READ_WRITE , s, NULL, &err);
   printError("OCL_Device: Malloc",err);
   return ocl_mem(this,mem,s);
 }
 
 ocl_mem ocl_device::malloc(size_t s,cl_mem_flags f){
   cl_int err;
-  cl_mem mem = clCreateBuffer(context->getContext(), f, s, NULL, &err);
+  cl_mem mem = clCreateBuffer(context.getContext(), f, s, NULL, &err);
   printError("OCL_Device: Malloc",err);
   return ocl_mem(this,mem,s);
 }
@@ -658,11 +661,11 @@ void ocl_device::barrier(){
 }
 
 void ocl_device::finish(){
-  commandQueue->finish();
+  commandQueue.finish();
 }
 
 void ocl_device::flush(){
-  commandQueue->flush();
+  commandQueue.flush();
 }
 
 cl_platform_id ocl_device::getPlatformID(){
@@ -674,15 +677,15 @@ cl_device_id ocl_device::getDeviceID(){
 }
 
 cl_context ocl_device::getContext(){
-  return context->getContext();
+  return context.getContext();
 }
 
 cl_command_queue ocl_device::getCommandQueue(){
-  return commandQueue->getCommandQueue();
+  return commandQueue.getCommandQueue();
 }
 
 int ocl_device::getGroupSize(int p){
-  if(p < 0 || 2 < p)
+  if(p < 0 || 2 < p || groupSize == NULL)
     printError("OCL_DEVICE: Getting group size",15);
   return groupSize[p];
 }
@@ -692,8 +695,7 @@ int ocl_device::getGroupSize(int p){
 //-----------------------------//
   
 ocl_context::ocl_context(){
-  allocs = new int[1];
-  allocs[0] = 1;
+  allocs = NULL;
 }
 
 ocl_context::ocl_context(const ocl_context& c){
@@ -706,7 +708,8 @@ ocl_context::ocl_context(const ocl_context& c){
   else{
     delete[] allocs;
     allocs = c.allocs;
-    clReleaseContext(context);
+    clReleaseContext(*context);
+    delete[] context;
   }
 
   allocs[0]++;
@@ -718,7 +721,8 @@ ocl_context::~ocl_context(){
     allocs[0]--;
   else{
     delete[] allocs;
-    clReleaseContext(context);
+    clReleaseContext(*context);
+    delete[] context;
   }
 }
 
@@ -732,7 +736,8 @@ ocl_context& ocl_context::operator=(const ocl_context& c){
   else{
     delete[] allocs;
     allocs = c.allocs;
-    clReleaseContext(context);
+    clReleaseContext(*context);
+    delete[] context;
   }
 
   allocs[0]++;
@@ -741,13 +746,18 @@ ocl_context& ocl_context::operator=(const ocl_context& c){
 }
 
 void ocl_context::create(cl_device_id* dID){
+  if(allocs == NULL){
+    allocs = new int[1];
+    allocs[0] = 1;
+  }
   cl_int err;
-  context = clCreateContext(NULL,1,dID,NULL,NULL,&err);
+  context = new cl_context[1];
+  *context = clCreateContext(NULL,1,dID,NULL,NULL,&err);
   printError("OCL_Context: Creating Context",err);
 }
 
 cl_context ocl_context::getContext(){
-  return context;
+  return *context;
 }
 
 //-----------------------------//
@@ -755,8 +765,7 @@ cl_context ocl_context::getContext(){
 //-----------------------------//
  
 ocl_commandQueue::ocl_commandQueue(){
-  allocs = new int[1];
-  allocs[0] = 1;
+  allocs = NULL;
 }
 
 ocl_commandQueue::ocl_commandQueue(const ocl_commandQueue& cq){
@@ -769,7 +778,8 @@ ocl_commandQueue::ocl_commandQueue(const ocl_commandQueue& cq){
   else{
     delete[] allocs;
     allocs = cq.allocs;
-    clReleaseCommandQueue(commandQueue);
+    clReleaseCommandQueue(*commandQueue);
+    delete[] commandQueue;
   }
 
   allocs[0]++;
@@ -781,7 +791,8 @@ ocl_commandQueue::~ocl_commandQueue(){
     allocs[0]--;
   else{
     delete[] allocs;
-    clReleaseCommandQueue(commandQueue);
+    clReleaseCommandQueue(*commandQueue);
+    delete[] commandQueue;
   }
 }
 
@@ -795,7 +806,8 @@ ocl_commandQueue& ocl_commandQueue::operator=(const ocl_commandQueue& cq){
   else{
     delete[] allocs;
     allocs = cq.allocs;
-    clReleaseCommandQueue(commandQueue);
+    clReleaseCommandQueue(*commandQueue);
+    delete[] commandQueue;
   }
 
   allocs[0]++;
@@ -804,21 +816,26 @@ ocl_commandQueue& ocl_commandQueue::operator=(const ocl_commandQueue& cq){
 }
 
 void ocl_commandQueue::create(cl_context context,cl_device_id dID){
+  if(allocs == NULL){
+    allocs = new int[1];
+    allocs[0] = 1;
+  }
   cl_int err;
-  commandQueue = clCreateCommandQueue(context,dID,0,&err);
+  commandQueue = new cl_command_queue[1];
+  *commandQueue = clCreateCommandQueue(context,dID,0,&err);
   printError("OCL_CommandQueue: Creating Command Queue",err);
 }
 
 void ocl_commandQueue::finish(){
-  clFinish(commandQueue);
+  clFinish(*commandQueue);
 }
 
 void ocl_commandQueue::flush(){
-  clFlush(commandQueue);
+  clFlush(*commandQueue);
 }
 
 cl_command_queue ocl_commandQueue::getCommandQueue(){
-  return commandQueue;
+  return *commandQueue;
 }
 
 //-----------------------------//

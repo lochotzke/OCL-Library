@@ -89,13 +89,41 @@ class ocl_kernel{
   int getGroupSize(int);
 };
 
+class ocl_context{
+ private:
+  int* allocs;
+  cl_context* context;
+ public:
+  ocl_context();
+  ocl_context(const ocl_context&);
+  ~ocl_context();
+  ocl_context& operator=(const ocl_context&);
+  void create(cl_device_id*);
+  cl_context getContext();
+};
+
+class ocl_commandQueue{
+ private:
+  int* allocs;
+  cl_command_queue* commandQueue;
+ public:
+  ocl_commandQueue();
+  ocl_commandQueue(const ocl_commandQueue&);
+  ~ocl_commandQueue();
+  ocl_commandQueue& operator=(const ocl_commandQueue&);
+  void create(cl_context context,cl_device_id dID);
+  cl_command_queue getCommandQueue();
+  void finish();
+  void flush();
+};
+
 class ocl_device{
  private:
   cl_platform_id pID;
   cl_device_id   dID;  
 
-  ocl_context* context;
-  ocl_commandQueue* commandQueue;
+  ocl_context context;
+  ocl_commandQueue commandQueue;
 
   int* groupSize;
 
@@ -116,34 +144,6 @@ class ocl_device{
   cl_context getContext();
   cl_command_queue getCommandQueue();
   int getGroupSize(int);
-};
-
-class ocl_context{
- private:
-  int* allocs;
-  cl_context context;
- public:
-  ocl_context();
-  ocl_context(const ocl_context&);
-  ~ocl_context();
-  ocl_context& operator=(const ocl_context&);
-  void create(cl_device_id*);
-  cl_context getContext();
-};
-
-class ocl_commandQueue{
- private:
-  int* allocs;
-  cl_command_queue commandQueue;
- public:
-  ocl_commandQueue();
-  ocl_commandQueue(const ocl_commandQueue&);
-  ~ocl_commandQueue();
-  ocl_commandQueue& operator=(const ocl_commandQueue&);
-  void create(cl_context context,cl_device_id dID);
-  cl_command_queue getCommandQueue();
-  void finish();
-  void flush();
 };
 
 class ocl_mem{
