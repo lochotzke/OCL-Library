@@ -578,6 +578,7 @@ ocl_device::ocl_device(){
   dID = NULL;
   context = new ocl_context[1]();
   commandQueue = new ocl_commandQueue[1]();
+  groupSize = new int[3];
 }
 
 ocl_device::ocl_device(const ocl_device& d){
