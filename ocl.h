@@ -19,7 +19,8 @@ class ocl_context;
 class ocl_commandQueue;
 
 class ocl_setup{
- private:
+private:
+  int* allocs;
   std::string shortInfo,longInfo,question1,question2;
 
   cl_platform_id* pID;
@@ -29,10 +30,12 @@ class ocl_setup{
 
   cl_int err;
 
- public:
+public:
   ocl_setup();
   ocl_setup(const ocl_setup&);
   ~ocl_setup();
+  void destructor();
+  void copyCheck(int*);
   ocl_setup& operator=(const ocl_setup&);
   void findDevices();
   void findDeviceInformation();
@@ -43,7 +46,9 @@ class ocl_setup{
 };
 
 class ocl_kernel{
- private:
+private:
+  int* allocs;
+
   ocl_device* device;
 
   std::string flags;
@@ -60,12 +65,14 @@ class ocl_kernel{
 
   int groups,items;
 
- public:
+public:
   ocl_kernel();
   ocl_kernel(const ocl_kernel&);
   ocl_kernel(ocl_device*,std::string);
   ocl_kernel(ocl_device*,std::string,std::string);
   ~ocl_kernel();
+  void destructor();
+  void copyCheck(int*);
   ocl_kernel& operator=(const ocl_kernel&);
   void setup(ocl_device*,std::string);
   void getKernelInformation(std::string);
@@ -90,26 +97,30 @@ class ocl_kernel{
 };
 
 class ocl_context{
- private:
+private:
   int* allocs;
   cl_context* context;
- public:
+public:
   ocl_context();
   ocl_context(const ocl_context&);
   ~ocl_context();
+  void destructor();
+  void copyCheck(int*);
   ocl_context& operator=(const ocl_context&);
   void create(cl_device_id*);
   cl_context getContext();
 };
 
 class ocl_commandQueue{
- private:
+private:
   int* allocs;
   cl_command_queue* commandQueue;
- public:
+public:
   ocl_commandQueue();
   ocl_commandQueue(const ocl_commandQueue&);
   ~ocl_commandQueue();
+  void destructor();
+  void copyCheck(int*);
   ocl_commandQueue& operator=(const ocl_commandQueue&);
   void create(cl_context context,cl_device_id dID);
   cl_command_queue getCommandQueue();
@@ -118,7 +129,9 @@ class ocl_commandQueue{
 };
 
 class ocl_device{
- private:
+private:
+  int* allocs;
+
   cl_platform_id pID;
   cl_device_id   dID;  
 
@@ -127,11 +140,13 @@ class ocl_device{
 
   int* groupSize;
 
- public:
+public:
   ocl_device();
   ocl_device(const ocl_device&);
   ocl_device(cl_platform_id,cl_device_id);
   ~ocl_device();
+  void destructor();
+  void copyCheck(int*);
   ocl_device& operator=(const ocl_device&);
   void refresh();
   ocl_mem malloc(size_t);
@@ -147,18 +162,20 @@ class ocl_device{
 };
 
 class ocl_mem{
- private:
+private:
   int* allocs;
   ocl_device* device;
   cl_mem memory;
   size_t size;
 
- public:
+public:
   ocl_mem();
   ocl_mem(const ocl_mem&);
   ocl_mem(ocl_device*,cl_mem);
   ocl_mem(ocl_device*,cl_mem,size_t);
   ~ocl_mem();
+  void destructor();
+  void copyCheck(int*);
   ocl_mem& operator=(const ocl_mem&);
   void copyTo(void*);
   void copyTo(void*,size_t,size_t);

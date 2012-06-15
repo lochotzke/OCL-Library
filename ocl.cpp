@@ -8,6 +8,10 @@
 #ifndef OCL_SETUP_C
 #define OCL_SETUP_C
 
+#ifndef OCL_DEBUG
+#define OCL_DEBUG 1
+#endif
+
 /* 
 //----------------------+-------------------------//
 // VARIABLE             |  DESCRIPTION            //
@@ -49,6 +53,9 @@ using namespace std;
 //          OCL_SETUP          //
 //-----------------------------//
 ocl_setup::ocl_setup(){
+  allocs = new int[1];
+  allocs[0] = 1;
+
   shortInfo = "";
   longInfo = "";
 
@@ -56,35 +63,27 @@ ocl_setup::ocl_setup(){
 
   question1 = "Print Detailed Information?\n"\
               "\t    i j - Platform i, Device j\n"\
-              "\t[Enter] - Platform \%d, Device \%d\n"\
               "\t[Other] - Shows Detailed Information\n"\
               "Input: ";
   question2 = "    i j - Platform i, Device j\n"\
-              "[Other] - Platform \%d, Device \%d\n"\
               "Input: ";
 }
 
 ocl_setup::ocl_setup(const ocl_setup& s){
-  shortInfo = s.shortInfo;
-  longInfo  = s.longInfo;
-  question1 = s.question1;
-  question2 = s.question2;
-  pID = s.pID;
-  dID = s.dID;
-  pSize = s.pSize;
-  dSize = s.dSize;
-  err = s.err;
+  *this = s;
 }
 
 ocl_setup::~ocl_setup(){
-  delete[] pID;
-  for(int i=0;i<pSize;i++)
-    delete[] dID[i];
-  delete[] dID;
-  delete[] dSize;
+  if(allocs[0] > 1)
+    allocs[0]--;
+  else{
+    delete[] allocs;
+    destructor();
+  }
 }
 
 ocl_setup& ocl_setup::operator=(const ocl_setup& s){
+  copyCheck(s.allocs);
   shortInfo = s.shortInfo;
   longInfo  = s.longInfo;
   question1 = s.question1;
@@ -95,6 +94,30 @@ ocl_setup& ocl_setup::operator=(const ocl_setup& s){
   dSize = s.dSize;
   err = s.err;
   return *this;
+}
+
+void ocl_setup::destructor(){
+  delete[] pID;
+  for(int i=0;i<pSize;i++)
+    delete[] dID[i];
+  delete[] dID;
+  delete[] dSize;
+
+}
+
+void ocl_setup::copyCheck(int* allocs2){
+  if(allocs == NULL)
+    allocs = allocs2;
+  else if(allocs[0] > 1){
+    allocs[0]--;
+    allocs = allocs2;
+  }
+  else{
+    delete[] allocs;
+    allocs = allocs2;
+    destructor();
+  }
+  allocs[0]++;
 }
 
 void ocl_setup::findDevices(){
@@ -247,19 +270,20 @@ ocl_device ocl_setup::displayDevices(){
   printf(question1.c_str(),di,dj);
   gets(buffer);
 
-  if(buffer[0] == '\0')
-    return ocl_device(pID[di],dID[di][dj]);
-  else if(sscanf(buffer,"%d %d",&i,&j) == 2)
+  if(sscanf(buffer,"%d %d",&i,&j) == 2)
     return ocl_device(pID[i],dID[i][j]);
 
   cout << longInfo;
   printf(question2.c_str(),di,dj);
   gets(buffer);
 
-  if(sscanf(buffer,"%d %d",&i,&j) == 2)
-    return ocl_device(pID[i],dID[i][j]);
-  else
-    return ocl_device(pID[di],dID[di][dj]);
+  while(sscanf(buffer,"%d %d",&i,&j) != 2){
+    cout << "Wrong Input, please try again\n";
+    printf(question2.c_str(),di,dj);
+    gets(buffer);
+  }
+
+  return ocl_device(pID[i],dID[i][j]);
 }
 
 ocl_device ocl_setup::getDevice(int p,int d){
@@ -279,46 +303,40 @@ cl_device_id ocl_setup::getDeviceID(int p,int d){
 //-----------------------------//
 
 ocl_kernel::ocl_kernel(){
+  allocs = NULL;
   inputSize = NULL;
 }
 
 ocl_kernel::ocl_kernel(const ocl_kernel& k){
-  device = k.device;
-  flags = k.flags;
-  kernel = k.kernel;
-  program = k.program;
-  name = k.name;
-  function = k.function;
-  inputs = k.inputs;
-
-  if(inputSize == NULL)
-    inputSize = new int[inputs];
-  for(int i=0;i<inputs;i++)
-    inputSize[i] = k.inputSize[i];
-
-  inputType = k.inputType;
-  groups = k.groups;
-  items = k.items;
+  *this = k;
 }
 
 ocl_kernel::ocl_kernel(ocl_device* d,string str){
+  allocs = new int[1];
+  allocs[0] = 1;
+
   setup(d,str);
 }
 
 ocl_kernel::ocl_kernel(ocl_device* d,string str,string fstr){
+  allocs = new int[1];
+  allocs[0] = 1;
+  
   flags = fstr;
   setup(d,str);
 }
 
 ocl_kernel::~ocl_kernel(){
-  if(function.compare("")){
-    delete[] inputSize;
-    clReleaseKernel(kernel);
-    clReleaseProgram(program);
+  if(allocs[0] > 1)
+    allocs[0]--;
+  else{
+    delete[] allocs;
+    destructor();
   }
 }
 
 ocl_kernel& ocl_kernel::operator=(const ocl_kernel& k){
+  copyCheck(k.allocs);
   device = k.device;
   flags = k.flags;
   kernel = k.kernel;
@@ -336,6 +354,29 @@ ocl_kernel& ocl_kernel::operator=(const ocl_kernel& k){
   groups = k.groups;
   items = k.items;
   return *this;
+}
+
+void ocl_kernel::destructor(){
+  if(function.compare("")){
+    delete[] inputSize;
+    clReleaseKernel(kernel);
+    clReleaseProgram(program);
+  }
+}
+
+void ocl_kernel::copyCheck(int* allocs2){
+  if(allocs == NULL)
+    allocs = allocs2;
+  else if(allocs[0] > 1){
+    allocs[0]--;
+    allocs = allocs2;
+  }
+  else{
+    delete[] allocs;
+    allocs = allocs2;
+    destructor();
+  }
+  allocs[0]++;
 }
 
 void ocl_kernel::setup(ocl_device* d,string str){
@@ -586,24 +627,20 @@ int ocl_kernel::getGroupSize(int p){
 //         OCL_DEVICE          //
 //-----------------------------//
 ocl_device::ocl_device(){
+  allocs = NULL;
   pID = NULL;
   dID = NULL;
   groupSize = NULL;
 }
 
 ocl_device::ocl_device(const ocl_device& d){
-  pID = d.pID; 
-  dID = d.dID; 
-  if(groupSize == NULL)
-    groupSize = new int[3];
-  context = d.context;
-  commandQueue = d.commandQueue;
-  groupSize[0] = d.groupSize[0];
-  groupSize[1] = d.groupSize[1];
-  groupSize[2] = d.groupSize[2];
+  *this = d;
 }
 
 ocl_device::ocl_device(cl_platform_id p,cl_device_id d){
+  allocs = new int[1];
+  allocs[0] = 1;
+
   pID = p;
   dID = d;
   groupSize = new int[3];
@@ -611,11 +648,16 @@ ocl_device::ocl_device(cl_platform_id p,cl_device_id d){
 }
 
 ocl_device::~ocl_device(){
-  if(groupSize != NULL)
-    delete[] groupSize;
+  if(allocs[0] > 1)
+    allocs[0]--;
+  else{
+    delete[] allocs;
+    destructor();
+  }
 }
 
 ocl_device& ocl_device::operator=(const ocl_device& d){
+  copyCheck(d.allocs);
   pID = d.pID; 
   dID = d.dID; 
   if(groupSize == NULL)
@@ -627,6 +669,26 @@ ocl_device& ocl_device::operator=(const ocl_device& d){
   groupSize[1] = d.groupSize[1];
   groupSize[2] = d.groupSize[2];
   return *this;
+}
+
+void ocl_device::destructor(){
+  if(groupSize != NULL)
+    delete[] groupSize;
+}
+
+void ocl_device::copyCheck(int* allocs2){
+  if(allocs == NULL)
+    allocs = allocs2;
+  else if(allocs[0] > 1){
+    allocs[0]--;
+    allocs = allocs2;
+  }
+  else{
+    delete[] allocs;
+    allocs = allocs2;
+    destructor();
+  }
+  allocs[0]++;
 }
 
 void ocl_device::refresh(){
@@ -699,21 +761,7 @@ ocl_context::ocl_context(){
 }
 
 ocl_context::ocl_context(const ocl_context& c){
-  if(allocs == NULL)
-    allocs = c.allocs;
-  else if(allocs[0] > 1){
-    allocs[0]--;
-    allocs = c.allocs;
-  }
-  else{
-    delete[] allocs;
-    allocs = c.allocs;
-    clReleaseContext(*context);
-    delete[] context;
-  }
-
-  allocs[0]++;
-  context = c.context;
+  *this = c;
 }
 
 ocl_context::~ocl_context(){
@@ -721,28 +769,34 @@ ocl_context::~ocl_context(){
     allocs[0]--;
   else{
     delete[] allocs;
-    clReleaseContext(*context);
-    delete[] context;
+    destructor();
   }
 }
 
 ocl_context& ocl_context::operator=(const ocl_context& c){
+  copyCheck(c.allocs);
+  context = c.context;  
+  return *this;
+}
+
+void ocl_context::destructor(){
+  clReleaseContext(*context);
+  delete[] context;
+}
+
+void ocl_context::copyCheck(int* allocs2){
   if(allocs == NULL)
-    allocs = c.allocs;
+    allocs = allocs2;
   else if(allocs[0] > 1){
     allocs[0]--;
-    allocs = c.allocs;
+    allocs = allocs2;
   }
   else{
     delete[] allocs;
-    allocs = c.allocs;
-    clReleaseContext(*context);
-    delete[] context;
+    allocs = allocs2;
+    destructor();
   }
-
   allocs[0]++;
-  context = c.context;  
-  return *this;
 }
 
 void ocl_context::create(cl_device_id* dID){
@@ -769,21 +823,7 @@ ocl_commandQueue::ocl_commandQueue(){
 }
 
 ocl_commandQueue::ocl_commandQueue(const ocl_commandQueue& cq){
-  if(allocs == NULL)
-    allocs = cq.allocs;
-  else if(allocs[0] > 1){
-    allocs[0]--;
-    allocs = cq.allocs;
-  }
-  else{
-    delete[] allocs;
-    allocs = cq.allocs;
-    clReleaseCommandQueue(*commandQueue);
-    delete[] commandQueue;
-  }
-
-  allocs[0]++;
-  commandQueue = cq.commandQueue;
+  *this = cq;
 }
 
 ocl_commandQueue::~ocl_commandQueue(){
@@ -791,28 +831,34 @@ ocl_commandQueue::~ocl_commandQueue(){
     allocs[0]--;
   else{
     delete[] allocs;
-    clReleaseCommandQueue(*commandQueue);
-    delete[] commandQueue;
+    destructor();
   }
 }
 
 ocl_commandQueue& ocl_commandQueue::operator=(const ocl_commandQueue& cq){
+  copyCheck(cq.allocs);
+  commandQueue = cq.commandQueue;  
+  return *this;
+}
+
+void ocl_commandQueue::destructor(){
+  clReleaseCommandQueue(*commandQueue);
+  delete[] commandQueue;
+}
+
+void ocl_commandQueue::copyCheck(int* allocs2){
   if(allocs == NULL)
-    allocs = cq.allocs;
+    allocs = allocs2;
   else if(allocs[0] > 1){
     allocs[0]--;
-    allocs = cq.allocs;
+    allocs = allocs2;
   }
   else{
     delete[] allocs;
-    allocs = cq.allocs;
-    clReleaseCommandQueue(*commandQueue);
-    delete[] commandQueue;
+    allocs = allocs2;
+    destructor();
   }
-
   allocs[0]++;
-  commandQueue = cq.commandQueue;  
-  return *this;
 }
 
 void ocl_commandQueue::create(cl_context context,cl_device_id dID){
@@ -843,31 +889,14 @@ cl_command_queue ocl_commandQueue::getCommandQueue(){
 //-----------------------------//
 
 ocl_mem::ocl_mem(){
-  allocs = new int[1];
-  allocs[0] = 1;
-
+  allocs = NULL;
   device = NULL;
   memory = NULL;
   size   = -1;
 }
 
 ocl_mem::ocl_mem(const ocl_mem& m){
-  if(allocs == NULL)
-    allocs = m.allocs;
-  else if(allocs[0] > 1){
-    allocs[0]--;
-    allocs = m.allocs;
-  }
-  else{
-    delete[] allocs;
-    allocs = m.allocs;
-    clReleaseMemObject(memory);
-  }
-
-  allocs[0]++;
-  device = m.device;
-  memory = m.memory;
-  size   = m.size;
+  *this = m;
 }
 
 ocl_mem::ocl_mem(ocl_device* d,cl_mem m,size_t s){
@@ -884,28 +913,35 @@ ocl_mem::~ocl_mem(){
     allocs[0]--;
   else{
     delete[] allocs;
-    clReleaseMemObject(memory);
+    destructor();
   }
 }
 
 ocl_mem& ocl_mem::operator=(const ocl_mem& m){
-  if(allocs == NULL)
-    allocs = m.allocs;
-  else if(allocs[0] > 1){
-    allocs[0]--;
-    allocs = m.allocs;
-  }
-  else{
-    delete[] allocs;
-    allocs = m.allocs;
-    clReleaseMemObject(memory);
-  }
-
-  allocs[0]++;
+  copyCheck(m.allocs);
   device = m.device;
   memory = m.memory;
   size   = m.size;
   return *this;
+}
+
+void ocl_mem::destructor(){
+  clReleaseMemObject(memory);
+}
+
+void ocl_mem::copyCheck(int* allocs2){
+  if(allocs == NULL)
+    allocs = allocs2;
+  else if(allocs[0] > 1){
+    allocs[0]--;
+    allocs = allocs2;
+  }
+  else{
+    delete[] allocs;
+    allocs = allocs2;
+    destructor();
+  }
+  allocs[0]++;
 }
 
 void ocl_mem::free(){
