@@ -9,7 +9,7 @@
 #define OCL_LIBRARY_INFO
 
 #include <iostream>
-#include <stdio.h>
+#include <cstdlib>
 #include <CL/cl.h>
 
 // Opencl Variable Sizes
