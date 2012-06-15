@@ -5,8 +5,8 @@
 //      https://github.com/dmed256/OCL-Library/blob/master/LICENSE    //
 //--------------------------------------------------------------------//
 
-#ifndef OCL_SETUP_INFO
-#define OCL_SETUP_INFO
+#ifndef OCL_LIBRARY_INFO
+#define OCL_LIBRARY_INFO
 
 #include <iostream>
 #include <stdio.h>

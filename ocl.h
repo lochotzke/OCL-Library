@@ -5,8 +5,8 @@
 //      https://github.com/dmed256/OCL-Library/blob/master/LICENSE    //
 //--------------------------------------------------------------------//
 
-#ifndef OCL_SETUP_H
-#define OCL_SETUP_H
+#ifndef OCL_LIBRARY_H
+#define OCL_LIBRARY_H
 
 #include <iostream>
 #include <vector>
