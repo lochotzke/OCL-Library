@@ -8,31 +8,6 @@
 #ifndef OCL_SETUP_C
 #define OCL_SETUP_C
 
-#ifndef OCL_DEBUG
-#define OCL_DEBUG 1
-#endif
-
-/* 
-//----------------------+-------------------------//
-// VARIABLE             |  DESCRIPTION            //
-//----------------------+-------------------------//
-// OCL_OUTPUT_BUILD_LOG | Outputs Build Log       //
-//----------------------+-------------------------//
-
-Note:
-   Valgrind shows memory leaks due to the follwing OpenCL functions hiding memory movement:
-   ocl_device::refresh() from either of the following:
-               clCreateContext()
-	       clCreateCommandQueue()
-   ocl_kernel::setup() from:
-               clCreateProgramWithSource()
-	       clBuildProgram()
-	       clCreateKernel()
-   ocl_setup::findDevices() from either of the following:
-              clGetPlatformIDs()
-	      clGetDeviceIDs()
- */
-
 #ifndef OCL_OUTPUT_BUILD_LOG
 #define OCL_OUTPUT_BUILD_LOG 0
 #endif
@@ -158,23 +133,23 @@ void ocl_setup::findDeviceInformation(){
   str << line;
   for (int i=0;i<pSize;i++){
     str << "PLATFORM: " << i << '\n';
-    printError("PLATFORM NAME",clGetPlatformInfo(pID[i], CL_PLATFORM_NAME , bSize, buffer, NULL));
+    ocl::printError("PLATFORM NAME",clGetPlatformInfo(pID[i], CL_PLATFORM_NAME , bSize, buffer, NULL));
     str << "\tPLATFORM_NAME       : " << buffer << '\n';
     
-    printError("PLATFORM VERSION",clGetPlatformInfo(pID[i], CL_PLATFORM_VERSION, bSize, buffer, NULL));
+    ocl::printError("PLATFORM VERSION",clGetPlatformInfo(pID[i], CL_PLATFORM_VERSION, bSize, buffer, NULL));
     str << "\tPLATFORM_VERSION    : " << buffer << '\n';
     str << starLine;
 
     for(int j=0;j<dSize[i];j++){
       str << "\tDEVICE: " << j << '\n';
 
-      printError("DEVICE_NAME",clGetDeviceInfo(dID[i][j], CL_DEVICE_NAME, bSize, buffer, NULL));
+      ocl::printError("DEVICE_NAME",clGetDeviceInfo(dID[i][j], CL_DEVICE_NAME, bSize, buffer, NULL));
       str << "\t\tDEVICE_NAME                        : " << buffer << '\n';
 
-      printError("DEVICE_VENDOR",clGetDeviceInfo(dID[i][j], CL_DEVICE_VENDOR, bSize, buffer, NULL));
+      ocl::printError("DEVICE_VENDOR",clGetDeviceInfo(dID[i][j], CL_DEVICE_VENDOR, bSize, buffer, NULL));
       str << "\t\tDEVICE_VENDOR                      : " << buffer << '\n';
 
-      printError("DEVICE_VERSION",clGetDeviceInfo(dID[i][j], CL_DEVICE_VERSION, bSize, buffer, NULL));
+      ocl::printError("DEVICE_VERSION",clGetDeviceInfo(dID[i][j], CL_DEVICE_VERSION, bSize, buffer, NULL));
       str << "\t\tDEVICE_VERSION                     : " << buffer << '\n';
       str << starLine;
     }
@@ -189,19 +164,19 @@ void ocl_setup::findDeviceInformation(){
     str << line;
     str << "PLATFORM            : " << i << '\n';
     
-    printError("PLATFORM PROFILE",clGetPlatformInfo(pID[i], CL_PLATFORM_PROFILE, bSize, buffer, NULL));
+    ocl::printError("PLATFORM PROFILE",clGetPlatformInfo(pID[i], CL_PLATFORM_PROFILE, bSize, buffer, NULL));
     str << "PLATFORM_PROFILE    : " << buffer << '\n';
     
-    printError("PLATFORM VERSION",clGetPlatformInfo(pID[i], CL_PLATFORM_VERSION, bSize, buffer, NULL));
+    ocl::printError("PLATFORM VERSION",clGetPlatformInfo(pID[i], CL_PLATFORM_VERSION, bSize, buffer, NULL));
     str << "PLATFORM_VERSION    : " << buffer << '\n';
     
-    printError("PLATFORM NAME",clGetPlatformInfo(pID[i], CL_PLATFORM_NAME , bSize, buffer, NULL));
+    ocl::printError("PLATFORM NAME",clGetPlatformInfo(pID[i], CL_PLATFORM_NAME , bSize, buffer, NULL));
     str << "PLATFORM_NAME       : " << buffer << '\n';
     
-    printError("PLATFORM VENDOR",clGetPlatformInfo(pID[i], CL_PLATFORM_VENDOR , bSize, buffer, NULL));
+    ocl::printError("PLATFORM VENDOR",clGetPlatformInfo(pID[i], CL_PLATFORM_VENDOR , bSize, buffer, NULL));
     str << "PLATFORM_VENDOR     : " << buffer << '\n';
     
-    printError("PLATFORM EXTENSIONS",clGetPlatformInfo(pID[i], CL_PLATFORM_EXTENSIONS, bSize, buffer, NULL));
+    ocl::printError("PLATFORM EXTENSIONS",clGetPlatformInfo(pID[i], CL_PLATFORM_EXTENSIONS, bSize, buffer, NULL));
     str << "PLATFORM_EXTENSIONS : " << buffer << "\n\n";
 
     str << starLine;
@@ -209,41 +184,41 @@ void ocl_setup::findDeviceInformation(){
     for(int j=0;j<dSize[i];j++){
       str << "\tDevice                             : " << j << endl;
 
-      printError("DEVICE_NAME",clGetDeviceInfo(dID[i][j], CL_DEVICE_NAME, bSize, buffer, NULL));
+      ocl::printError("DEVICE_NAME",clGetDeviceInfo(dID[i][j], CL_DEVICE_NAME, bSize, buffer, NULL));
       str << "\tDEVICE_NAME                        : " <<  buffer << endl;
 
-      printError("DEVICE_VENDOR",clGetDeviceInfo(dID[i][j], CL_DEVICE_VENDOR, bSize, buffer, NULL));
+      ocl::printError("DEVICE_VENDOR",clGetDeviceInfo(dID[i][j], CL_DEVICE_VENDOR, bSize, buffer, NULL));
       str << "\tDEVICE_VENDOR                      : " <<  buffer << endl;
 
-      printError("DEVICE_VERSION",clGetDeviceInfo(dID[i][j], CL_DEVICE_VERSION, bSize, buffer, NULL));
+      ocl::printError("DEVICE_VERSION",clGetDeviceInfo(dID[i][j], CL_DEVICE_VERSION, bSize, buffer, NULL));
       str << "\tDEVICE_VERSION                     : " <<  buffer << endl;
 
-      printError("DRIVER_VERSION",clGetDeviceInfo(dID[i][j], CL_DRIVER_VERSION, bSize, buffer, NULL));
+      ocl::printError("DRIVER_VERSION",clGetDeviceInfo(dID[i][j], CL_DRIVER_VERSION, bSize, buffer, NULL));
       str << "\tDRIVER_VERSION                     : " <<  buffer << endl;
 
-      printError("DEVICE_MAX_COMPUTE_UNITS",
+      ocl::printError("DEVICE_MAX_COMPUTE_UNITS",
 		 clGetDeviceInfo(dID[i][j], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(buf_uint), &buf_uint, NULL));
       str << "\tDEVICE_MAX_COMPUTE_UNITS           : " << (unsigned int)buf_uint << endl;
 
-      printError("DEVICE_MAX_CLOCK_FREQUENCY",
+      ocl::printError("DEVICE_MAX_CLOCK_FREQUENCY",
 		 clGetDeviceInfo(dID[i][j], CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(buf_uint), &buf_uint, NULL));
       str << "\tDEVICE_MAX_CLOCK_FREQUENCY         : " <<  (unsigned int)buf_uint << endl;
 
-      printError("DEVICE_GLOBAL_MEM_SIZE",
+      ocl::printError("DEVICE_GLOBAL_MEM_SIZE",
 		 clGetDeviceInfo(dID[i][j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(buf_ulong), &buf_ulong, NULL));
       str << "\tDEVICE_GLOBAL_MEM_SIZE             : " <<  (unsigned long long)buf_ulong << endl;
 
-      printError("DEVICE_MAX_WORK_GROUP_SIZE",
+      ocl::printError("DEVICE_MAX_WORK_GROUP_SIZE",
 		 clGetDeviceInfo(dID[i][j], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(buf_ulong), &buf_ulong, NULL));
       str << "\tDEVICE_MAX_WORK_GROUP_SIZE         : " <<  (unsigned long long)buf_ulong << endl;
 
       size_t workitem_dims;
-      printError("GET_MAX_ITEM_DIMENSIONS",
+      ocl::printError("GET_MAX_ITEM_DIMENSIONS",
 		 clGetDeviceInfo(dID[i][j], CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(workitem_dims), &workitem_dims, NULL));
       str << "\tCL_DEVICE_MAX_WORK_ITEM_DIMENSIONS : " <<  (unsigned int) workitem_dims << endl;
 	    
       size_t workitem_size[3];
-      printError("GET_MAX_WORK_ITEM_SIZES",
+      ocl::printError("GET_MAX_WORK_ITEM_SIZES",
 		 clGetDeviceInfo(dID[i][j], CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(workitem_size), &workitem_size, NULL));
       str << "\tCL_DEVICE_MAX_WORK_ITEM_SIZES      : " 
 	  << (int) workitem_size[0] << " / " 
@@ -406,10 +381,10 @@ void ocl_kernel::setup(ocl_device* d,string str){
   cl_device_id dID = device->getDeviceID();
   
   program = clCreateProgramWithSource(device->getContext(),1,&cFunction,&cLength,&err);
-  printError("OCL_Kernel ("+name+") : Constructing Program",err);
+  ocl::printError("OCL_Kernel ("+name+") : Constructing Program",err);
 
   err = clBuildProgram(program,1,&dID,flags.c_str(),NULL,NULL);
-  printError("OCL_Kernel ("+name+") : Building Program",err);
+  ocl::printError("OCL_Kernel ("+name+") : Building Program",err);
 
 #if OCL_OUTPUT_BUILD_LOG
   char* log;
@@ -426,7 +401,7 @@ void ocl_kernel::setup(ocl_device* d,string str){
 #endif
 
   kernel = clCreateKernel(program,name.c_str(),&err);
-  printError("OCL_Kernel : Creating Kernel",err);
+  ocl::printError("OCL_Kernel : Creating Kernel",err);
 }
 
 void ocl_kernel::getKernelInformation(string str){
@@ -540,10 +515,10 @@ void ocl_kernel::setDims(size_t g,size_t i){
 void ocl_kernel::setArgs(void* x,...){
   va_list list;
   va_start(list,x);
-  printError("OCL_Kernel ("+name+") : Setting Kernel Arguments",
+  ocl::printError("OCL_Kernel ("+name+") : Setting Kernel Arguments",
   	     clSetKernelArg(kernel,0,inputSize[0],x));
   for(int i=1;i<inputs;i++)
-    printError("OCL_Kernel ("+name+") : Setting Kernel Arguments",
+    ocl::printError("OCL_Kernel ("+name+") : Setting Kernel Arguments",
   	       clSetKernelArg(kernel,i,inputSize[i],(void*) va_arg(list,void*)));
 
   va_end(list);
@@ -551,21 +526,21 @@ void ocl_kernel::setArgs(void* x,...){
 
 void ocl_kernel::setArg(int pos,void* arg){
   if(pos >= inputs || pos < 0)
-    printError("OCL_Kernel ("+name+") : Incorrect Kernel Argument Position",15);
-  printError("OCL_Kernel ("+name+") : Setting Kernel Arguments",
+    ocl::printError("OCL_Kernel ("+name+") : Incorrect Kernel Argument Position",15);
+  ocl::printError("OCL_Kernel ("+name+") : Setting Kernel Arguments",
 	     clSetKernelArg(kernel,pos,inputSize[pos],arg));
 }
 
 string ocl_kernel::getArgType(int pos){
   if(pos >= inputs || pos < 0)
-    printError("OCL_Kernel ("+name+") : Incorrect Kernel Argument Position",15);    
+    ocl::printError("OCL_Kernel ("+name+") : Incorrect Kernel Argument Position",15);    
   return inputType[pos];
 }
 
 void ocl_kernel::run(){
   const size_t a = items;
   const size_t b = groups;
-  printError("OCL_Kernel ("+name+") : Kernel Run",
+  ocl::printError("OCL_Kernel ("+name+") : Kernel Run",
 	     clEnqueueNDRangeKernel(device->getCommandQueue(),kernel,1,NULL,&a,&b,0,NULL,NULL));  
 }
 
@@ -609,7 +584,7 @@ void ocl_kernel::setFlags(string f){
 
 int ocl_kernel::getWarpSize(){
   size_t ret;
-  printError("OCL_DEVICE: Getting Warp Size",
+  ocl::printError("OCL_DEVICE: Getting Warp Size",
 	     clGetKernelWorkGroupInfo(kernel,device->getDeviceID(),CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE,
 				      sizeof(size_t),&ret,NULL));
   return ret;
@@ -695,7 +670,7 @@ void ocl_device::refresh(){
   context.create(&dID);
   commandQueue.create(context.getContext(),dID);
   size_t* tmp = new size_t[3];
-  printError("GET_MAX_WORK_ITEM_SIZES",
+  ocl::printError("GET_MAX_WORK_ITEM_SIZES",
 	     clGetDeviceInfo(dID, CL_DEVICE_MAX_WORK_ITEM_SIZES, 3*sizeof(size_t), tmp, NULL));
   groupSize[0] = tmp[0];
   groupSize[1] = tmp[1];
@@ -706,20 +681,20 @@ void ocl_device::refresh(){
 ocl_mem ocl_device::malloc(size_t s){
   cl_int err;
   cl_mem mem = clCreateBuffer(context.getContext(), CL_MEM_READ_WRITE , s, NULL, &err);
-  printError("OCL_Device: Malloc",err);
+  ocl::printError("OCL_Device: Malloc",err);
   return ocl_mem(this,mem,s);
 }
 
 ocl_mem ocl_device::malloc(size_t s,cl_mem_flags f){
   cl_int err;
   cl_mem mem = clCreateBuffer(context.getContext(), f, s, NULL, &err);
-  printError("OCL_Device: Malloc",err);
+  ocl::printError("OCL_Device: Malloc",err);
   return ocl_mem(this,mem,s);
 }
 
 void ocl_device::barrier(){
   ///////////////////////////////////
-  //printError("OCL_Device: Malloc",clEnqueueBarrier(*commandQueue));
+  //ocl::printError("OCL_Device: Malloc",clEnqueueBarrier(*commandQueue));
 }
 
 void ocl_device::finish(){
@@ -748,7 +723,7 @@ cl_command_queue ocl_device::getCommandQueue(){
 
 int ocl_device::getGroupSize(int p){
   if(p < 0 || 2 < p || groupSize == NULL)
-    printError("OCL_DEVICE: Getting group size",15);
+    ocl::printError("OCL_DEVICE: Getting group size",15);
   return groupSize[p];
 }
 
@@ -807,7 +782,7 @@ void ocl_context::create(cl_device_id* dID){
   cl_int err;
   context = new cl_context[1];
   *context = clCreateContext(NULL,1,dID,NULL,NULL,&err);
-  printError("OCL_Context: Creating Context",err);
+  ocl::printError("OCL_Context: Creating Context",err);
 }
 
 cl_context ocl_context::getContext(){
@@ -869,7 +844,7 @@ void ocl_commandQueue::create(cl_context context,cl_device_id dID){
   cl_int err;
   commandQueue = new cl_command_queue[1];
   *commandQueue = clCreateCommandQueue(context,dID,0,&err);
-  printError("OCL_CommandQueue: Creating Command Queue",err);
+  ocl::printError("OCL_CommandQueue: Creating Command Queue",err);
 }
 
 void ocl_commandQueue::finish(){

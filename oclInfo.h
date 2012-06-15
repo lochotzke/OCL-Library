@@ -9,6 +9,7 @@
 #define OCL_SETUP_INFO
 
 #include <iostream>
+#include <stdio.h>
 #include <CL/cl.h>
 
 // Opencl Variable Sizes
@@ -67,81 +68,82 @@ namespace ocl{
     "CL_INVALID_GL_OBJECT"              ,"CL_INVALID_BUFFER_SIZE"          ,"CL_INVALID_MIP_LEVEL",
     "CL_INVALID_GLOBAL_WORK_SIZE"       ,"CL_INVALID_PROPERTY"
   };
+
+  void printError(std::string s,int error){
+    if(error){
+      error = error < 0  ? error : -error;
+      error = error < 65 ? error : 15;
+      std::cout << s << " Error: " << error << '\n'
+		<< "OpenCL Error: " << ocl::error[-error] << ".\n"
+		<< "Exiting Program.\n";
+      exit(1);
+    }
+  };
+
+  void printSizes(){
+    std::cout << "sizeof(char) = " << sizeof(cl_char) << std::endl
+	      << "sizeof(char16) = " << sizeof(cl_char16) << std::endl
+	      << "sizeof(char2) = " << sizeof(cl_char2) << std::endl
+	      << "sizeof(char3) = " << sizeof(cl_char3) << std::endl
+	      << "sizeof(char4) = " << sizeof(cl_char4) << std::endl
+	      << "sizeof(char8) = " << sizeof(cl_char8) << std::endl
+	      << "sizeof(cl_mem) = " << sizeof(cl_mem) << std::endl
+	      << "sizeof(double) = " << sizeof(cl_double) << std::endl
+	      << "sizeof(double16) = " << sizeof(cl_double16) << std::endl
+	      << "sizeof(double2) = " << sizeof(cl_double2) << std::endl
+	      << "sizeof(double3) = " << sizeof(cl_double3) << std::endl
+	      << "sizeof(double4) = " << sizeof(cl_double4) << std::endl
+	      << "sizeof(double8) = " << sizeof(cl_double8) << std::endl
+	      << "sizeof(float) = " << sizeof(cl_float) << std::endl
+	      << "sizeof(float16) = " << sizeof(cl_float16) << std::endl
+	      << "sizeof(float2) = " << sizeof(cl_float2) << std::endl
+	      << "sizeof(float3) = " << sizeof(cl_float3) << std::endl
+	      << "sizeof(float4) = " << sizeof(cl_float4) << std::endl
+	      << "sizeof(float8) = " << sizeof(cl_float8) << std::endl
+	      << "sizeof(half) = " << sizeof(cl_half) << std::endl
+	      << "sizeof(int) = " << sizeof(cl_int) << std::endl
+	      << "sizeof(int16) = " << sizeof(cl_int16) << std::endl
+	      << "sizeof(int2) = " << sizeof(cl_int2) << std::endl
+	      << "sizeof(int3) = " << sizeof(cl_int3) << std::endl
+	      << "sizeof(int4) = " << sizeof(cl_int4) << std::endl
+	      << "sizeof(int8) = " << sizeof(cl_int8) << std::endl
+	      << "sizeof(long) = " << sizeof(cl_long) << std::endl
+	      << "sizeof(long16) = " << sizeof(cl_long16) << std::endl
+	      << "sizeof(long2) = " << sizeof(cl_long2) << std::endl
+	      << "sizeof(long3) = " << sizeof(cl_long3) << std::endl
+	      << "sizeof(long4) = " << sizeof(cl_long4) << std::endl
+	      << "sizeof(long8) = " << sizeof(cl_long8) << std::endl
+	      << "sizeof(short) = " << sizeof(cl_short) << std::endl
+	      << "sizeof(short16) = " << sizeof(cl_short16) << std::endl
+	      << "sizeof(short2) = " << sizeof(cl_short2) << std::endl
+	      << "sizeof(short3) = " << sizeof(cl_short3) << std::endl
+	      << "sizeof(short4) = " << sizeof(cl_short4) << std::endl
+	      << "sizeof(short8) = " << sizeof(cl_short8) << std::endl
+	      << "sizeof(uchar) = " << sizeof(cl_uchar) << std::endl
+	      << "sizeof(uchar16) = " << sizeof(cl_uchar16) << std::endl
+	      << "sizeof(uchar2) = " << sizeof(cl_uchar2) << std::endl
+	      << "sizeof(uchar3) = " << sizeof(cl_uchar3) << std::endl
+	      << "sizeof(uchar4) = " << sizeof(cl_uchar4) << std::endl
+	      << "sizeof(uchar8) = " << sizeof(cl_uchar8) << std::endl
+	      << "sizeof(uint) = " << sizeof(cl_uint) << std::endl
+	      << "sizeof(uint16) = " << sizeof(cl_uint16) << std::endl
+	      << "sizeof(uint2) = " << sizeof(cl_uint2) << std::endl
+	      << "sizeof(uint3) = " << sizeof(cl_uint3) << std::endl
+	      << "sizeof(uint4) = " << sizeof(cl_uint4) << std::endl
+	      << "sizeof(uint8) = " << sizeof(cl_uint8) << std::endl
+	      << "sizeof(ulong) = " << sizeof(cl_ulong) << std::endl
+	      << "sizeof(ulong16) = " << sizeof(cl_ulong16) << std::endl
+	      << "sizeof(ulong2) = " << sizeof(cl_ulong2) << std::endl
+	      << "sizeof(ulong3) = " << sizeof(cl_ulong3) << std::endl
+	      << "sizeof(ulong4) = " << sizeof(cl_ulong4) << std::endl
+	      << "sizeof(ulong8) = " << sizeof(cl_ulong8) << std::endl
+	      << "sizeof(ushort) = " << sizeof(cl_ushort) << std::endl
+	      << "sizeof(ushort16) = " << sizeof(cl_ushort16) << std::endl
+	      << "sizeof(ushort2) = " << sizeof(cl_ushort2) << std::endl
+	      << "sizeof(ushort3) = " << sizeof(cl_ushort3) << std::endl
+	      << "sizeof(ushort4) = " << sizeof(cl_ushort4) << std::endl
+	      << "sizeof(ushort8) = " << sizeof(cl_ushort8) << std::endl;
+  };
 };
-
-void printError(std::string s,int error){
-  if(error){
-    error = error < 0  ? error : -error;
-    error = error < 65 ? error : 15;
-    std::cout << s << " Error: " << error << '\n'
-	      << "OpenCL Error: " << ocl::error[-error] << std::endl;
-    throw 1;
-  }
-}
-
-void printSizes(){
-  std::cout << "sizeof(char) = " << sizeof(cl_char) << std::endl
-	    << "sizeof(char16) = " << sizeof(cl_char16) << std::endl
-	    << "sizeof(char2) = " << sizeof(cl_char2) << std::endl
-	    << "sizeof(char3) = " << sizeof(cl_char3) << std::endl
-	    << "sizeof(char4) = " << sizeof(cl_char4) << std::endl
-	    << "sizeof(char8) = " << sizeof(cl_char8) << std::endl
-	    << "sizeof(cl_mem) = " << sizeof(cl_mem) << std::endl
-	    << "sizeof(double) = " << sizeof(cl_double) << std::endl
-	    << "sizeof(double16) = " << sizeof(cl_double16) << std::endl
-	    << "sizeof(double2) = " << sizeof(cl_double2) << std::endl
-	    << "sizeof(double3) = " << sizeof(cl_double3) << std::endl
-	    << "sizeof(double4) = " << sizeof(cl_double4) << std::endl
-	    << "sizeof(double8) = " << sizeof(cl_double8) << std::endl
-	    << "sizeof(float) = " << sizeof(cl_float) << std::endl
-	    << "sizeof(float16) = " << sizeof(cl_float16) << std::endl
-	    << "sizeof(float2) = " << sizeof(cl_float2) << std::endl
-	    << "sizeof(float3) = " << sizeof(cl_float3) << std::endl
-	    << "sizeof(float4) = " << sizeof(cl_float4) << std::endl
-	    << "sizeof(float8) = " << sizeof(cl_float8) << std::endl
-	    << "sizeof(half) = " << sizeof(cl_half) << std::endl
-	    << "sizeof(int) = " << sizeof(cl_int) << std::endl
-	    << "sizeof(int16) = " << sizeof(cl_int16) << std::endl
-	    << "sizeof(int2) = " << sizeof(cl_int2) << std::endl
-	    << "sizeof(int3) = " << sizeof(cl_int3) << std::endl
-	    << "sizeof(int4) = " << sizeof(cl_int4) << std::endl
-	    << "sizeof(int8) = " << sizeof(cl_int8) << std::endl
-	    << "sizeof(long) = " << sizeof(cl_long) << std::endl
-	    << "sizeof(long16) = " << sizeof(cl_long16) << std::endl
-	    << "sizeof(long2) = " << sizeof(cl_long2) << std::endl
-	    << "sizeof(long3) = " << sizeof(cl_long3) << std::endl
-	    << "sizeof(long4) = " << sizeof(cl_long4) << std::endl
-	    << "sizeof(long8) = " << sizeof(cl_long8) << std::endl
-	    << "sizeof(short) = " << sizeof(cl_short) << std::endl
-	    << "sizeof(short16) = " << sizeof(cl_short16) << std::endl
-	    << "sizeof(short2) = " << sizeof(cl_short2) << std::endl
-	    << "sizeof(short3) = " << sizeof(cl_short3) << std::endl
-	    << "sizeof(short4) = " << sizeof(cl_short4) << std::endl
-	    << "sizeof(short8) = " << sizeof(cl_short8) << std::endl
-	    << "sizeof(uchar) = " << sizeof(cl_uchar) << std::endl
-	    << "sizeof(uchar16) = " << sizeof(cl_uchar16) << std::endl
-	    << "sizeof(uchar2) = " << sizeof(cl_uchar2) << std::endl
-	    << "sizeof(uchar3) = " << sizeof(cl_uchar3) << std::endl
-	    << "sizeof(uchar4) = " << sizeof(cl_uchar4) << std::endl
-	    << "sizeof(uchar8) = " << sizeof(cl_uchar8) << std::endl
-	    << "sizeof(uint) = " << sizeof(cl_uint) << std::endl
-	    << "sizeof(uint16) = " << sizeof(cl_uint16) << std::endl
-	    << "sizeof(uint2) = " << sizeof(cl_uint2) << std::endl
-	    << "sizeof(uint3) = " << sizeof(cl_uint3) << std::endl
-	    << "sizeof(uint4) = " << sizeof(cl_uint4) << std::endl
-	    << "sizeof(uint8) = " << sizeof(cl_uint8) << std::endl
-	    << "sizeof(ulong) = " << sizeof(cl_ulong) << std::endl
-	    << "sizeof(ulong16) = " << sizeof(cl_ulong16) << std::endl
-	    << "sizeof(ulong2) = " << sizeof(cl_ulong2) << std::endl
-	    << "sizeof(ulong3) = " << sizeof(cl_ulong3) << std::endl
-	    << "sizeof(ulong4) = " << sizeof(cl_ulong4) << std::endl
-	    << "sizeof(ulong8) = " << sizeof(cl_ulong8) << std::endl
-	    << "sizeof(ushort) = " << sizeof(cl_ushort) << std::endl
-	    << "sizeof(ushort16) = " << sizeof(cl_ushort16) << std::endl
-	    << "sizeof(ushort2) = " << sizeof(cl_ushort2) << std::endl
-	    << "sizeof(ushort3) = " << sizeof(cl_ushort3) << std::endl
-	    << "sizeof(ushort4) = " << sizeof(cl_ushort4) << std::endl
-	    << "sizeof(ushort8) = " << sizeof(cl_ushort8) << std::endl;
-}
 
 #endif
