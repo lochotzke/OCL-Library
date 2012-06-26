@@ -1,6 +1,7 @@
 To run the example:
 1. Copy files to some directory
 2. Type the command 'make' without the quotes
+   2.5 Change example2.cpp to example1.cpp to run (They give the same output though)
 3. Type ./a.out to run the program
 
 The OCL Library Documentation can be found in the Wiki page in the OCL Library Git Repository
