@@ -18,7 +18,13 @@
 #include <vector>
 
 #include <stdarg.h>
+
+#ifdef __APPLE__
+#include <OpenCL/opencl.h>
+#else
 #include <CL/cl.h>
+#endif
+
 #include "ocl.h"
 #include "oclInfo.h"
 

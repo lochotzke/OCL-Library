@@ -6,8 +6,8 @@ int main(){
   // Get available devices and platforms
   ocl_setup o;
 
-  // Get device 3 from platform 1
-  ocl_device device = o.getDevice(1,3);
+  // Find all devices
+  ocl_device device = o.displayDevices();
 
   // Create a kernel using the device above from vectoradd.cl
   ocl_kernel kernel(&device,"vectoradd.cl");

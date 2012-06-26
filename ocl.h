@@ -10,7 +10,12 @@
 
 #include <iostream>
 #include <vector>
+
+#ifdef __APPLE__
+#include <OpenCL/opencl.h>
+#else
 #include <CL/cl.h>
+#endif
 
 class ocl_kernel;
 class ocl_device;
