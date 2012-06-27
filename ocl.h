@@ -195,4 +195,15 @@ public:
   size_t getSize();
 };
 
+// Opencl Variable Sizes
+namespace ocl{
+  extern const int types;
+  extern const std::string type[];
+  extern const int typeSize[];
+  extern const char error[65][45];
+
+  extern void printError(std::string,int);
+  extern void printSizes();
+};
+
 #endif
