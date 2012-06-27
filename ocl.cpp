@@ -414,12 +414,9 @@ void ocl_kernel::getKernelInformation(string str){
   int end;
 
   if(start < 9){
-    try{
-      throw 1;
-    }
-    catch(int i){
-      cout << "OCL_Kernel : Getting Kernel Information Error\n";
-    }
+    cout << "OCL_Kernel : Getting Kernel Information Error\n"
+	 << "Exiting Program.\n";
+    exit(1);
   }
   
   string dm = " \t\n(*";
@@ -502,12 +499,8 @@ int ocl_kernel::sizeofType(string type){
       right = current;
 
     if(current == (left+right)/2){
-      try{
-	throw 1;
-      }
-      catch(int i){
-	cout << "OCL_Kernel ("+name+") : Type <" << type << "> not found in oclInfo\n";
-      }
+      cout << "OCL_Kernel ("+name+") : Type <" << type << "> not found in oclInfo\n"
+	   << "Exiting Program.\n";
     }
   }
 }
