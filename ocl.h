@@ -208,6 +208,9 @@ namespace ocl{
   extern void printError(std::string,int);
   extern void printSizes();
 
+  extern void printParsedKernel(ocl_kernel&);
+  extern void printParsedKernel(std::string);
+  extern void parseKernel(std::string,std::vector<std::string>&, std::vector<int>&);
   extern const std::string keywords[];  
 };
 

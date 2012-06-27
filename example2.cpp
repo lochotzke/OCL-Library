@@ -11,8 +11,9 @@ int main(){
   ocl_setup o;
 
   // Find all devices
-  ocl_device device = o.displayDevices();
-
+  //ocl_device device = o.displayDevices();
+  ocl_device device = o.getDevice(1,3);
+ 
   int N = 1024;
 
   // Create a kernel using the device above from vectoradd.cl

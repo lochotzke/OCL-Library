@@ -1195,6 +1195,89 @@ namespace ocl{
 	      << "sizeof(ushort4) = " << sizeof(cl_ushort4) << std::endl
 	      << "sizeof(ushort8) = " << sizeof(cl_ushort8) << std::endl;
   };
+
+  void printParsedKernel(ocl_kernel& k){
+    printParsedKernel(k.getFunction());
+  }
+
+  void printParsedKernel(std::string s){
+    std::vector<std::string> words;
+    std::vector<int> wType;
+
+    parseKernel(s,words,wType);
+
+    for(int i=0;i<words.size();i++){
+      if(wType[i] < 0)
+	std::cout << words[i] << std::endl;
+      else
+	std::cout << '\t' << words[i] << std::endl;
+    }
+  }
+
+  void parseKernel(std::string s, std::vector<std::string>& words, std::vector<int>& wType){
+    const std::string delim1 = "({[)}],;~*%?:^&|-+/!=<>";
+    const std::string delim2 = "*/^^&&||--++==!=//<<>>/*<=>=";
+    
+    int length = s.length();
+    std::stringstream ret;
+    int rSize = 0;
+    int found1,found2;
+    int offset = 0;
+    int writing = 1;
+    
+    for(int i=0;i<length;i++){
+      if(isspace(s[i])){
+	if(writing){
+	  words.push_back(s.substr(offset,i-offset));
+	  wType.push_back(-1);
+	  writing = 0;
+	}
+
+	i++;
+	while(i < length && isspace(s[i]))
+	  i++;
+      }
+
+      found1 = delim1.find(s[i]);
+      while(i < length && (found1 != std::string::npos)){
+	if(writing){
+	  words.push_back(s.substr(offset,i-offset));
+	  wType.push_back(-1);
+	  writing = 0;
+	}
+
+	if(i < length-1){
+	  found2 = delim2.find(s.substr(i,2));
+
+	  if(i < length && (found2 != std::string::npos)){
+	    words.push_back(s.substr(i,2));
+	    i++;
+	  }
+	  else{
+	    words.push_back(s.substr(i,1));
+	    found2 = found1;
+	  }
+
+	  wType.push_back(found2);
+	  
+	  i++;
+	  found1 = delim1.find(s.substr(i,1));
+	}
+	else{
+	  words.push_back(s.substr(i,1));
+	  wType.push_back(found1);
+	  
+	  i++;
+	  found1 = delim1.find(s.substr(i,1));
+	}
+      }
+	
+      if(i < length && !writing){
+	  writing = 1;
+	  offset = i;
+      }
+    }
+  };
   
 };
 
