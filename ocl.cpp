@@ -1195,6 +1195,45 @@ namespace ocl{
 	      << "sizeof(ushort4) = " << sizeof(cl_ushort4) << std::endl
 	      << "sizeof(ushort8) = " << sizeof(cl_ushort8) << std::endl;
   };
+  
 };
 
 #endif
+
+const std::string keywords[] = {
+  "__constant"       ,"__global"          ,"__kernel"         ,"__local"          ,"__private",
+  "__read_only"      ,"__read_write"      ,"__write_only"     ,"bool"             ,"bool16",
+  "bool2"            ,"bool3"             ,"bool4"            ,"bool8"            ,"char",
+  "char16"           ,"char2"             ,"char3"            ,"char4"            ,"char8",
+  "complex double"   ,"complex double16"  ,"complex double2"  ,"complex double3"  ,"complex double4",
+  "complex double8"  ,"complex float"     ,"complex float16"  ,"complex float2"   ,"complex float3",
+  "complex float4"   ,"complex float8"    ,"complex half"     ,"complex half16"   ,"complex half2",
+  "complex half3"    ,"complex half4"     ,"complex half8"    ,"complex quad"     ,"complex quad16",
+  "complex quad2"    ,"complex quad3"     ,"complex quad4"    ,"complex quad8"    ,"constant",
+  "double"           ,"double16"          ,"double2"          ,"double3"          ,"double4",
+  "double8"          ,"enum"              ,"float"            ,"float16"          ,"float2",
+  "float3"           ,"float4"            ,"float8"           ,"global"           ,"half",
+  "imaginary double" ,"imaginary double16","imaginary double2","imaginary double3","imaginary double4",
+  "imaginary double8","imaginary float"   ,"imaginary float16","imaginary float2" ,"imaginary float3",
+  "imaginary float4" ,"imaginary float8"  ,"imaginary half"   ,"imaginary half16" ,"imaginary half2",
+  "imaginary half3"  ,"imaginary half4"   ,"imaginary half8"  ,"imaginary quad"   ,"imaginary quad16",
+  "imaginary quad2"  ,"imaginary quad3"   ,"imaginary quad4"  ,"imaginary quad8"  ,"int",
+  "int16"            ,"int2"              ,"int3"             ,"int4"             ,"int8",
+  "intmax_t"         ,"intptr_t"          ,"kernel"           ,"local"            ,"long",
+  "long double"      ,"long double16"     ,"long double2"     ,"long double3"     ,"long double4",
+  "long double8"     ,"long long"         ,"long long16"      ,"long long2"       ,"long long3",
+  "long long4"       ,"long long8"        ,"long16"           ,"long2"            ,"long3",
+  "long4"            ,"long8"             ,"private"          ,"ptrdiff_t"        ,"quad",
+  "quad16"           ,"quad2"             ,"quad3"            ,"quad4"            ,"quad8",
+  "read_only"        ,"read_write"        ,"short"            ,"short16"          ,"short2",
+  "short3"           ,"short4"            ,"short8"           ,"signed char"      ,"size_t",
+  "struct"           ,"typedef"           ,"uchar"            ,"uchar16"          ,"uchar2",
+  "uchar3"           ,"uchar4"            ,"uchar8"           ,"uint"             ,"uint16",
+  "uint2"            ,"uint3"             ,"uint4"            ,"uint8"            ,"uintmax_t",
+  "uintptr_t"        ,"ulong"             ,"ulong long"       ,"ulong long16"     ,"ulong long2",
+  "ulong long4"      ,"ulong long8"       ,"ulong16"          ,"ulong2"           ,"ulong3",
+  "ulong4"           ,"ulong8"            ,"union"            ,"unsigned char"    ,"unsigned int",
+  "unsigned long"    ,"unsigned long"     ,"unsigned short"   ,"ushort16"         ,"ushort2",
+  "ushort3"          ,"ushort4"           ,"ushort8"          ,"ushort"           ,"void",
+  "write_only"
+};

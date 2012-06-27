@@ -197,6 +197,8 @@ public:
 
 // Opencl Variable Sizes
 namespace ocl{
+
+class ocl_parser{
   extern const int types;
   extern const std::string type[];
   extern const int typeSize[];
@@ -206,6 +208,10 @@ namespace ocl{
   extern void printKernel(std::string);
   extern void printError(std::string,int);
   extern void printSizes();
+
+  extern const std::string keywords[];
+  };
+  
 };
 
 #endif
