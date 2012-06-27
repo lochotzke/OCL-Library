@@ -21,6 +21,9 @@ int main(){
   // We can copy without memory leaks
   ocl_kernel add = kernel;  
 
+  // Print the add kernel with the current "dumb" parser
+  ocl::printKernel(add);
+
   // Create host variables
   float* a = new float[N*sizeof(float)];
   float* b = new float[N*sizeof(float)]();

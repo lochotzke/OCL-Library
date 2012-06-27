@@ -1019,7 +1019,7 @@ namespace ocl{
     "CL_INVALID_GLOBAL_WORK_SIZE"       ,"CL_INVALID_PROPERTY"
   };
 
-  void printKernel(ocl_kernel k){
+  void printKernel(ocl_kernel& k){
     printKernel(k.getFunction());
   };
 
@@ -1117,7 +1117,7 @@ namespace ocl{
       }
     }
 
-    std::cout << ret.str() << std::endl;
+    std::cout << std::endl << ret.str() << std::endl;
   };
 
   void printError(std::string s,int error){
