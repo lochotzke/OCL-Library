@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------//
-//   Copyright (c) 2012, David Medina                                 //
+//   Copyright (c) 2012, Tim Warburton, David Medina                  //
 //   All rights reserved.                                             //
 //   License Located in:                                              //
 //      https://github.com/dmed256/OCL-Library/blob/master/LICENSE    //
