@@ -15,9 +15,9 @@ objects = $(sources:.cpp=.o)
 all: example
 	rm *.o
 example: $(objects)
-	g++ $(objects) $(paths) $(links)
+	g++ -g $(objects) $(paths) $(links)
 %.o:%.cpp
-	g++ -c -w $(paths) $<
+	g++ -g -c -w $(paths) $<
 clean:
 	rm *.o;
 

@@ -15,7 +15,7 @@
 
 #include <stdarg.h>
 
-#ifdef __APPLE__
+#if  defined(__APPLE__) || defined(__MACOSX)
 #include <OpenCL/opencl.h>
 #else
 #include <CL/cl.h>
@@ -282,6 +282,8 @@ ocl_kernel::ocl_kernel(){
 }
 
 ocl_kernel::ocl_kernel(const ocl_kernel& k){
+  allocs = NULL;
+  inputSize = NULL;  
   *this = k;
 }
 
@@ -289,6 +291,7 @@ ocl_kernel::ocl_kernel(ocl_device* d,std::string str){
   allocs = new int[1];
   allocs[0] = 1;
 
+  nice = 1;
   setup(d,str);
 }
 
@@ -297,6 +300,24 @@ ocl_kernel::ocl_kernel(ocl_device* d,std::string str,std::string fstr){
   allocs[0] = 1;
   
   flags = fstr;
+  nice = 1;
+  setup(d,str);
+}
+
+ocl_kernel::ocl_kernel(ocl_device* d,std::string str,int n){
+  allocs = new int[1];
+  allocs[0] = 1;
+  
+  nice = n;
+  setup(d,str);
+}
+
+ocl_kernel::ocl_kernel(ocl_device* d,std::string str,std::string fstr,int n){
+  allocs = new int[1];
+  allocs[0] = 1;
+  
+  flags = fstr;
+  nice = n;
   setup(d,str);
 }
 
@@ -318,6 +339,8 @@ ocl_kernel& ocl_kernel::operator=(const ocl_kernel& k){
   name = k.name;
   function = k.function;
   inputs = k.inputs;
+  nice = k.nice;
+
 
   if(inputSize == NULL)
     inputSize = new int[inputs];
@@ -374,7 +397,9 @@ void ocl_kernel::setup(ocl_device* d,std::string str){
     function = str;
 
   getKernelInformation(function);
-  function = ocl::getNiceKernel(function);
+  
+  if(nice)
+    function = ocl::getNiceKernel(function);
 
   const char* cFunction = function.c_str();
   const size_t cLength = function.length();
@@ -556,6 +581,10 @@ void ocl_kernel::run(size_t g,size_t i){
   groups = g;
   items = i;
   run();
+}
+
+void ocl_kernel::printKernel(){
+  std::cout << function << std::endl;
 }
 
 cl_kernel ocl_kernel::getKernel(){
@@ -1025,100 +1054,233 @@ namespace ocl{
   };
 
   std::string getNiceKernel(std::string s){
+    std::vector<std::string> words;
+    std::vector<int> wType;
     std::stringstream ret;
-    
-    char delim[100];
-    int depth = 0;
-    int length = s.length();
-    std::string indent = "";
-    int newline = 0;
+    int pos = 0;
 
-    for(int i=0;i<length;i++){
-      switch(((int) s[i])){
-      case ((int) '{'):
-	ret << "{\n";
-	delim[depth++] = s[i];
-	indent += "   ";
-	newline = 1;
-	break;
-      case ((int) '}'):
-	depth--;
-	indent.resize(3*depth);
-	ret << indent;
-	ret << "}\n";
-	newline = 1;
-	break;
-      case ((int) '/'):
-	if(i+1 < length){
-	  if(s[i+1] == '/'){
-	    if(newline){
-	      ret << indent;
-	      newline = 0;
-	    }
-	    ret << s[i++] << s[i++];
-	    while(i < length && s[i] != '\n'){
-	      ret << s[i++];
-	    }
-	    ret << s[i];
-	    newline = 1;
-	  }
-	  else if(s[i+1] == '*'){
-	    if(newline){
-	      ret << indent;
-	      newline = 0;
-	    }
-	    ret << s[i++] << s[i++];
-	    delim[depth++] = '*';
-	  }
-	  else
-	    ret << '/';
-	}
-	else
-	  ret << '/';
-	break;
-      case ((int) '*'):
-	if(depth > 0 && delim[depth-1] == '*' && i < length && s[i+1] == '/'){
-	  ret << s[i++] << s[i++] << '\n';
-	  newline = 1;
-	  depth--;
-	ret << indent;
-	}
-	else{
-	  if(newline){
-	    ret << indent;
-	    newline = 0;
-	  }
-	  ret << s[i];
-	}
-	break;
-      case ((int) ';'):
-	if(newline){
-	  ret << indent;
-	  newline = 0;
-	}
-	ret << ";\n";
-	newline = 1;
-	break;
-      case ((int) '\n'):
-	if(newline){
-	  ret << indent;
-	  newline = 0;
-	}
-	ret << '\n';
-	newline = 1;
-	break;
-      default:
-	if(newline){
-	  ret << indent << s[i];
-	  newline = 0;
-	}
-	else
-	  ret << s[i];
-	break;
-      }
-    }
+    parseKernel(s,words,wType);
+    
+    checkParsedKernel(pos,"",ret,words,wType);
 
     return ret.str();
+  }
+
+  void checkParsedKernel(int& pos, std::string indent, std::stringstream& ret, std::vector<std::string>& words, std::vector<int>& wType){
+    int wordsSize = words.size();
+    std::string tmp;
+    int space = 2;
+    char ctmp;
+    int fc;
+        
+    while(pos < wordsSize){
+      tmp = words[pos++];
+
+      if(wType[pos-1] < 0){
+	if(!tmp.compare("for")){
+	  fc = 0;
+	  ret << indent << "for";
+
+	  while(pos < wordsSize && words[pos].compare("("))
+	    ret << ' ' << words[pos++];
+
+	  ret << "(";
+
+	  while(++pos < wordsSize && fc < 3){
+	    if(!words[pos].compare(";")){
+	      ret << words[pos];
+	      fc++;
+	      space = 0;
+	    }
+	    else if(!words[pos].compare("(")){
+	      ret << words[pos];
+	      if(pos < wordsSize)
+	      fc--;
+	      space = 0;
+	    }
+	    else if(!words[pos].compare(")")){
+	      ret << words[pos];
+	      fc++;
+	    }
+	    else if(wType[pos] < 0)
+	      parseKernelSpaceCheck(space,ret," ",words[pos]);
+	    else{
+	      if(parseKernelOperatorCheck(pos,space,ret,indent,words,wType))
+		return;
+	    }
+	  }
+	}
+	else if(!tmp.compare("if")){
+	  ret << indent << "if";
+	  space = 0;
+	  fc = 0;
+
+	  while(pos < wordsSize && words[pos].compare("("))
+	    ret << ' ' << words[pos++];
+	  pos++;
+
+	  ret << "(";
+
+	  while(pos < wordsSize && fc < 1){
+	    if(!words[pos].compare("(")){
+	      ret << words[pos++];
+	      fc--;
+	      space = 0;
+	    }
+	    else if(!words[pos].compare(")")){
+	      ret << words[pos++];
+	      fc++;
+	    }
+	    else if(wType[pos] < 0)
+	      parseKernelSpaceCheck(space,ret," ",words[pos++]);
+	    else{
+	      if(parseKernelOperatorCheck(pos,space,ret,indent,words,wType))
+		return;
+	      pos++;
+	    }
+	  }
+
+	  if(wType[pos] > 0){
+	    if(parseKernelOperatorCheck(pos,space,ret,indent,words,wType))
+	      return;
+	    pos++;
+	  }
+	}
+	else
+	  parseKernelSpaceCheck(space,ret,indent,tmp);
+      }
+      else{
+	pos--;
+	if(parseKernelOperatorCheck(pos,space,ret,indent,words,wType))
+	  return;
+	pos++;
+      }
+    }
+  }
+
+  int parseKernelOperatorCheck(int& pos, int& space, std::stringstream& ret, std::string indent, std::vector<std::string>& words, std::vector<int>& wType){
+    char ch;
+    std::string word = words[pos];
+
+    if(word.length() > 1){
+      ch = word[0];
+      if(!word.compare("--") || !word.compare("++"))
+	space = 0;
+      parseKernelSpaceCheck(space,ret,indent,word);
+    }
+    else{
+      ch = word[0];
+      if(!(ch - ';')){
+	ret << ";\n";
+	space = 2;
+      }
+      else if(!(ch - '}')){
+	for(int i=0;i<(indent.length()-2);i++)
+	  ret << ' ';
+	ret << "}\n";
+	return 1;
+      }
+      else if(!(ch - '{')){
+	ret << "{\n";
+	checkParsedKernel(++pos,indent+"  ",ret,words,wType);	  
+      }
+      else if(!(ch - '(') || !(ch - '[') || !(ch - ',')){
+	ret << ch;
+	space = 0;
+      }
+      else if(!(ch - ')') || !(ch - ']')){
+	ret << ch;
+	space = 1;
+      }
+      else
+	parseKernelSpaceCheck(space,ret,indent,word);
+    }
+
+    return 0;
+  }
+
+  void parseKernelSpaceCheck(int& space,std::stringstream& ret,std::string indent,std::string& word){
+    if(space == 2){
+      ret << indent << word;
+      space = 1;
+    }
+    else if(space)
+      ret << ' ' << word;
+    else{
+      ret << word;
+      space = 1;
+    }
+  }
+
+  void parseKernel(std::string s, std::vector<std::string>& words, std::vector<int>& wType){
+    const std::string delim1 = "({[)}],;~*%?:^&|-+/!=<>";
+    const std::string delim2 = "*/^^&&||--++==!=//<<>>/*<=>=";
+    
+    int length = s.length();
+    std::stringstream ret;
+    int rSize = 0;
+    int found = 0;
+    int found1,found2;
+    int offset = 0;
+    int writing = 1;
+    
+    for(int i=0;i<length;i++){
+      if(isspace(s[i])){
+	if(writing){
+	  words.push_back(s.substr(offset,i-offset));
+	  wType.push_back(-1);
+	  writing = 0;
+	}
+
+	i++;
+	while(i < length && isspace(s[i]))
+	  i++;
+      }
+
+      found1 = delim1.find(s[i]);
+      while(i < length && (found1 != std::string::npos)){
+	found = 1;
+	if(writing){
+	  words.push_back(s.substr(offset,i-offset));
+	  wType.push_back(-1);
+	  writing = 0;
+	}
+
+	if(i < length-1){
+	  found2 = delim2.find(s.substr(i,2));
+
+	  if(i < length && (found2 != std::string::npos)){
+	    words.push_back(s.substr(i,2));
+	    i++;
+	  }
+	  else{
+	    words.push_back(s.substr(i,1));
+	    found2 = found1;
+	  }
+
+	  wType.push_back(found2);
+	  
+	  i++;
+	  found1 = delim1.find(s.substr(i,1));
+	}
+	else{
+	  words.push_back(s.substr(i,1));
+	  wType.push_back(found1);
+	  
+	  i++;
+	  found1 = delim1.find(s.substr(i,1));
+	}
+      }
+	
+      if(found){
+	found = 0;
+	i--;
+      }
+      else if(i < length && !writing){
+	writing = 1;
+	offset = i;
+      }
+    }
   };
 
   void printError(std::string s,int error){
@@ -1195,91 +1357,7 @@ namespace ocl{
 	      << "sizeof(ushort3) = " << sizeof(cl_ushort3) << std::endl
 	      << "sizeof(ushort4) = " << sizeof(cl_ushort4) << std::endl
 	      << "sizeof(ushort8) = " << sizeof(cl_ushort8) << std::endl;
-  };
-
-  void printParsedKernel(ocl_kernel& k){
-    printParsedKernel(k.getFunction());
-  }
-
-  void printParsedKernel(std::string s){
-    std::vector<std::string> words;
-    std::vector<int> wType;
-
-    parseKernel(s,words,wType);
-
-    for(int i=0;i<words.size();i++){
-      if(wType[i] < 0)
-	std::cout << words[i] << std::endl;
-      else
-	std::cout << '\t' << words[i] << std::endl;
-    }
-  }
-
-  void parseKernel(std::string s, std::vector<std::string>& words, std::vector<int>& wType){
-    const std::string delim1 = "({[)}],;~*%?:^&|-+/!=<>";
-    const std::string delim2 = "*/^^&&||--++==!=//<<>>/*<=>=";
-    
-    int length = s.length();
-    std::stringstream ret;
-    int rSize = 0;
-    int found1,found2;
-    int offset = 0;
-    int writing = 1;
-    
-    for(int i=0;i<length;i++){
-      if(isspace(s[i])){
-	if(writing){
-	  words.push_back(s.substr(offset,i-offset));
-	  wType.push_back(-1);
-	  writing = 0;
-	}
-
-	i++;
-	while(i < length && isspace(s[i]))
-	  i++;
-      }
-
-      found1 = delim1.find(s[i]);
-      while(i < length && (found1 != std::string::npos)){
-	if(writing){
-	  words.push_back(s.substr(offset,i-offset));
-	  wType.push_back(-1);
-	  writing = 0;
-	}
-
-	if(i < length-1){
-	  found2 = delim2.find(s.substr(i,2));
-
-	  if(i < length && (found2 != std::string::npos)){
-	    words.push_back(s.substr(i,2));
-	    i++;
-	  }
-	  else{
-	    words.push_back(s.substr(i,1));
-	    found2 = found1;
-	  }
-
-	  wType.push_back(found2);
-	  
-	  i++;
-	  found1 = delim1.find(s.substr(i,1));
-	}
-	else{
-	  words.push_back(s.substr(i,1));
-	  wType.push_back(found1);
-	  
-	  i++;
-	  found1 = delim1.find(s.substr(i,1));
-	}
-      }
-	
-      if(i < length && !writing){
-	  writing = 1;
-	  offset = i;
-      }
-    }
-  };
-  
+  };  
 };
 
 #endif

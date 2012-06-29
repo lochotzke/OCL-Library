@@ -70,11 +70,15 @@ private:
 
   int groups,items;
 
+  int nice;
+
 public:
   ocl_kernel();
   ocl_kernel(const ocl_kernel&);
   ocl_kernel(ocl_device*,std::string);
   ocl_kernel(ocl_device*,std::string,std::string);
+  ocl_kernel(ocl_device*,std::string,int);
+  ocl_kernel(ocl_device*,std::string,std::string,int);
   ~ocl_kernel();
   void destructor();
   void copyCheck(int*);
@@ -88,6 +92,7 @@ public:
   void setDims(size_t,size_t);
   void run();
   void run(size_t,size_t);
+  void printKernel();
   cl_kernel getKernel();
   cl_program getProgram();
   std::string getName();
@@ -205,13 +210,13 @@ namespace ocl{
 
   extern std::string getNiceKernel(ocl_kernel&);
   extern std::string getNiceKernel(std::string);
+  extern int parseKernelOperatorCheck(int&,int&,std::stringstream&,std::string,std::vector<std::string>&,std::vector<int>&);
+  extern void checkParsedKernel(int&,std::string,std::stringstream&,std::vector<std::string>&,std::vector<int>&);
+  extern void parseKernelSpaceCheck(int&,std::stringstream&,std::string,std::string&);
+  extern void parseKernel(std::string,std::vector<std::string>&,std::vector<int>&);
+
   extern void printError(std::string,int);
   extern void printSizes();
-
-  extern void printParsedKernel(ocl_kernel&);
-  extern void printParsedKernel(std::string);
-  extern void parseKernel(std::string,std::vector<std::string>&, std::vector<int>&);
-  extern const std::string keywords[];  
 };
 
 #endif

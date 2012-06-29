@@ -17,13 +17,25 @@ int main(){
   int N = 1024;
 
   // Create a kernel using the device above from vectoradd.cl
+  //    Default: Format the kernel to look "nice"
+  //             Allows for easy debugging
   ocl_kernel kernel(&device,getAddKernel(N));
 
   // We can copy without memory leaks
   ocl_kernel add = kernel;  
 
-  // Print the add kernel with the current "dumb" parser
-  ocl::printKernel(add);
+  // Prints the kernel nicely using a parser
+  //    Allows for easy debugging
+  cout << "Nice-looking Kernel" << endl
+       << "-------------------" << endl ;
+  add.printKernel();
+
+  // Creating the same kernel without the "nice" format
+  ocl_kernel looksBad(&device,getAddKernel(N),false);
+
+  cout << "Original Kernel" << endl
+       << "---------------" << endl ;
+  looksBad.printKernel();
 
   // Create host variables
   float* a = new float[N*sizeof(float)];
@@ -56,6 +68,7 @@ int main(){
   //   This saves a lot of time inputting them
   //     individually.
   add.setArgs(&N,_a.mem(),_b.mem(),_c.mem());
+  looksBad.setArgs(&N,_a.mem(),_b.mem(),_c.mem());
 
   // We can also set the args manually (which is useful when checking constants)
   add.setArg(0,&N);
@@ -65,6 +78,7 @@ int main(){
   add.setDims(N,N);
 
   add.run();
+  looksBad.run(N,N);
 
   // Wait until the kernel is done executing
   device.finish();
@@ -87,13 +101,23 @@ int main(){
 string getAddKernel(int size){
   stringstream ret;
 
+  // Using stringstream allows the programmer to code
+  //    OpenCL almost like in a real file since it
+  //    emulates "newlines" by separating the string
+  // However, it looks horrible when printing it, so
+  //    The kernel has a parser that automatically
+  //    formats the code with new lines and indentations
   ret << "__kernel void vectoradd(const int N,"
       << "__global float *a,"
       << "__global float *b,"
-      << "__global float *c){";
-  ret << "int n = get_global_id(0);"
-      << "if(n<N)"
+      << "__global float *c){"
+      << "int n = get_global_id(0);"
+      << "if(n<N){"
       << "c[n] = a[n] + b[n];"
+      << "}"
+      << "for(int i=0;i<20;i++){"
+      << "}"
+      << "if(0);"
       << '}';  
 
   return ret.str();
