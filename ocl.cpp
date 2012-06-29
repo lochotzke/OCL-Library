@@ -422,6 +422,11 @@ void ocl_kernel::setup(ocl_device* d,std::string str){
     err = clGetProgramBuildInfo(program, device->getDeviceID(), CL_PROGRAM_BUILD_LOG, logSize, log, NULL);  
   ocl::printError("OCL_Kernel ("+name+") : Building Program",err);
     log[logSize] = '\0';
+    
+    if(!nice)
+      std::cout << ocl::getNiceKernel(function) << std::endl;
+    else
+      std::cout << function << std::endl;
 
     std::cout << "OCL_Kernel (" << name << "): Build Log\n" << log;
 
@@ -1165,9 +1170,16 @@ namespace ocl{
 
     if(word.length() > 1){
       ch = word[0];
-      if(!word.compare("--") || !word.compare("++"))
+      if(!word.compare("--") || !word.compare("++")){
 	space = 0;
-      parseKernelSpaceCheck(space,ret,indent,word);
+	parseKernelSpaceCheck(space,ret,indent,word);
+      }
+      else if(!word.compare("//") || !word.compare("/*")){
+	ret << '\n' << word << words[++pos];
+	space = 2;
+      }
+      else
+	parseKernelSpaceCheck(space,ret,indent,word);
     }
     else{
       ch = word[0];
@@ -1265,19 +1277,37 @@ namespace ocl{
 	if(i < length-1){
 	  found2 = delim2.find(s.substr(i,2));
 
-	  if(i < length && (found2 != std::string::npos)){
+	  if(found2 != std::string::npos){
 	    words.push_back(s.substr(i,2));
-	    i++;
+	    if(!s.substr(i,2).compare("/*")){	      
+	      i++;
+	      offset = i+1;
+	      while(++i<length && (s[i] - '*') && ++i<length && (s[i] - '/')){}
+	      words.push_back(s.substr(offset,i-offset+2));
+	      wType.push_back(found2);
+	      wType.push_back(-1);
+	    }
+	    if(!s.substr(i,2).compare("//")){
+	      i++;
+	      offset = i+1;
+	      while(++i<length && (s[i] - '\n')){}
+	      words.push_back(s.substr(offset,i-offset+1));
+	      wType.push_back(found2);
+	      wType.push_back(-1);
+	    }
+	    else{
+	      wType.push_back(found2);
+	      i++;
+	    }
 	  }
 	  else{
 	    words.push_back(s.substr(i,1));
-	    found2 = found1;
+	    wType.push_back(found1);
 	  }
-
-	  wType.push_back(found2);
 	  
 	  i++;
-	  found1 = delim1.find(s.substr(i,1));
+	  if(i < length)
+	    found1 = delim1.find(s.substr(i,1));
 	}
 	else{
 	  words.push_back(s.substr(i,1));
