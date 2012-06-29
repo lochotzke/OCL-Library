@@ -8,10 +8,6 @@
 #ifndef OCL_LIBRARY
 #define OCL_LIBRARY
 
-#ifndef OCL_OUTPUT_BUILD_LOG
-#define OCL_OUTPUT_BUILD_LOG 0
-#endif
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -378,30 +374,35 @@ void ocl_kernel::setup(ocl_device* d,std::string str){
     function = str;
 
   getKernelInformation(function);
+  function = ocl::getNiceKernel(function);
 
   const char* cFunction = function.c_str();
   const size_t cLength = function.length();
   cl_device_id dID = device->getDeviceID();
   
-  program = clCreateProgramWithSource(device->getContext(),1,&cFunction,&cLength,&err);
-  ocl::printError("OCL_Kernel ("+name+") : Constructing Program",err);
+  cl_int err2;
+  program = clCreateProgramWithSource(device->getContext(),1,&cFunction,&cLength,&err2);
 
   err = clBuildProgram(program,1,&dID,flags.c_str(),NULL,NULL);
-  ocl::printError("OCL_Kernel ("+name+") : Building Program",err);
+  //ocl::printError("OCL_Kernel ("+name+") : Building Program",err);
 
-#if OCL_OUTPUT_BUILD_LOG
   char* log;
   size_t logSize;
 
   err = clGetProgramBuildInfo(program, device->getDeviceID(), CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);    
-  log = new char[logSize];
-  err = clGetProgramBuildInfo(program, device->getDeviceID(), CL_PROGRAM_BUILD_LOG, logSize, log, NULL);  
-  log[logSize] = '\0';
 
-  std::cout << "Build Log:\n\t" << log;
+  if(logSize > 2){
+    log = new char[logSize];
 
-  delete[] log;
-#endif
+    err = clGetProgramBuildInfo(program, device->getDeviceID(), CL_PROGRAM_BUILD_LOG, logSize, log, NULL);  
+    log[logSize] = '\0';
+
+    std::cout << "OCL_Kernel (" << name << "): Build Log\n" << log;
+
+    delete[] log;
+  }
+
+  ocl::printError("OCL_Kernel ("+name+") : Constructing Program",err2);
 
   kernel = clCreateKernel(program,name.c_str(),&err);
   ocl::printError("OCL_Kernel : Creating Kernel",err);
@@ -1019,11 +1020,11 @@ namespace ocl{
     "CL_INVALID_GLOBAL_WORK_SIZE"       ,"CL_INVALID_PROPERTY"
   };
 
-  void printKernel(ocl_kernel& k){
-    printKernel(k.getFunction());
+  std::string getNiceKernel(ocl_kernel& k){
+    return getNiceKernel(k.getFunction());
   };
 
-  void printKernel(std::string s){
+  std::string getNiceKernel(std::string s){
     std::stringstream ret;
     
     char delim[100];
@@ -1117,7 +1118,7 @@ namespace ocl{
       }
     }
 
-    std::cout << std::endl << ret.str() << std::endl;
+    return ret.str();
   };
 
   void printError(std::string s,int error){

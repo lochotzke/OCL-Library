@@ -203,8 +203,8 @@ namespace ocl{
   extern const int typeSize[];
   extern const char error[65][45];
 
-  extern void printKernel(ocl_kernel&);
-  extern void printKernel(std::string);
+  extern std::string getNiceKernel(ocl_kernel&);
+  extern std::string getNiceKernel(std::string);
   extern void printError(std::string,int);
   extern void printSizes();
 
