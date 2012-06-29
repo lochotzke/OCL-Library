@@ -409,17 +409,18 @@ void ocl_kernel::setup(ocl_device* d,std::string str){
   program = clCreateProgramWithSource(device->getContext(),1,&cFunction,&cLength,&err2);
 
   err = clBuildProgram(program,1,&dID,flags.c_str(),NULL,NULL);
-  //ocl::printError("OCL_Kernel ("+name+") : Building Program",err);
 
   char* log;
   size_t logSize;
 
   err = clGetProgramBuildInfo(program, device->getDeviceID(), CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);    
+  ocl::printError("OCL_Kernel ("+name+") : Building Program",err);
 
   if(logSize > 2){
     log = new char[logSize];
 
     err = clGetProgramBuildInfo(program, device->getDeviceID(), CL_PROGRAM_BUILD_LOG, logSize, log, NULL);  
+  ocl::printError("OCL_Kernel ("+name+") : Building Program",err);
     log[logSize] = '\0';
 
     std::cout << "OCL_Kernel (" << name << "): Build Log\n" << log;
@@ -1175,14 +1176,15 @@ namespace ocl{
 	space = 2;
       }
       else if(!(ch - '}')){
-	for(int i=0;i<(indent.length()-2);i++)
+	for(int i=0;i<(indent.length()-3);i++)
 	  ret << ' ';
 	ret << "}\n";
 	return 1;
       }
       else if(!(ch - '{')){
 	ret << "{\n";
-	checkParsedKernel(++pos,indent+"  ",ret,words,wType);	  
+	checkParsedKernel(++pos,indent+"   ",ret,words,wType);
+	space = 2;
       }
       else if(!(ch - '(') || !(ch - '[') || !(ch - ',')){
 	ret << ch;
@@ -1191,6 +1193,10 @@ namespace ocl{
       else if(!(ch - ')') || !(ch - ']')){
 	ret << ch;
 	space = 1;
+      }
+      else if(!(ch - '#')){
+	ret << "\n#" << words[++pos];
+	pos++;
       }
       else
 	parseKernelSpaceCheck(space,ret,indent,word);
@@ -1213,7 +1219,7 @@ namespace ocl{
   }
 
   void parseKernel(std::string s, std::vector<std::string>& words, std::vector<int>& wType){
-    const std::string delim1 = "({[)}],;~*%?:^&|-+/!=<>";
+    const std::string delim1 = "({[)}],;~*%?:^&|-+/!=<>#";
     const std::string delim2 = "*/^^&&||--++==!=//<<>>/*<=>=";
     
     int length = s.length();
@@ -1238,6 +1244,16 @@ namespace ocl{
       }
 
       found1 = delim1.find(s[i]);
+      if(found1 && !(s[i]-'#')){
+	offset = i+1;
+	while(++i<length && (s[i] - '\n')){}
+	words.push_back("#");
+	words.push_back(s.substr(offset,i-offset+1));
+	wType.push_back(1);
+	wType.push_back(-1);
+
+	writing = 0;
+      }
       while(i < length && (found1 != std::string::npos)){
 	found = 1;
 	if(writing){
