@@ -1232,7 +1232,7 @@ namespace ocl{
 
   void parseKernel(std::string s, std::vector<std::string>& words, std::vector<int>& wType){
     const std::string delim1 = "({[)}],;~*%?:^&|-+/!=<>#";
-    const std::string delim2 = "*/^^&&||--++==!=//<<>>/*<=>=";
+    const std::string delim2 = "*/^^*=&&/=||--++==!=//+=<<-=>>/*<=>=";
     
     int length = s.length();
     std::stringstream ret;
