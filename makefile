@@ -9,7 +9,7 @@ paths = -I${hPath} -I/usr/local/cuda/include
 # Change -L/usr/local/cuda/lib to the location where your
 #   OpenCL libraries are stored in
 links = -lm -L/usr/local/cuda/lib -lOpenCL
-sources = example2.cpp ocl.cpp 
+sources = example3.cpp ocl.cpp 
 objects = $(sources:.cpp=.o)
 
 all: example

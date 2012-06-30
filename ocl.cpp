@@ -633,7 +633,7 @@ float ocl_kernel::getRunTime(int i){
   clGetEventProfilingInfo(event,CL_PROFILING_COMMAND_START,sizeof(cl_ulong),&start,NULL);
   clGetEventProfilingInfo(event,CL_PROFILING_COMMAND_END,sizeof(cl_ulong),&end,NULL);  
 
-  return (end-start)*1e-9;
+  return (end-start)*1.e-6;
 }
 
 void ocl_kernel::printKernel(){
@@ -1208,6 +1208,11 @@ namespace ocl{
 	    }
 	  }
 
+	  if(words[pos].compare("{")){
+	    ret << "\n   ";
+	    space = 2;
+	  }
+
 	  if(wType[pos] > 0){
 	    if(parseKernelOperatorCheck(pos,space,ret,indent,words,wType))
 	      return;
@@ -1260,7 +1265,7 @@ namespace ocl{
 	checkParsedKernel(++pos,indent+"   ",ret,words,wType);
 	space = 2;
       }
-      else if(!(ch - '(') || !(ch - '[') || !(ch - ',')){
+      else if(!(ch - '(') || !(ch - '[') || !(ch - ',') || !(ch - '!')){
 	ret << ch;
 	space = 0;
       }

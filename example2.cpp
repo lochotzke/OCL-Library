@@ -37,9 +37,9 @@ int main(){
   looksBad.printKernel();
 
   // Create host variables
-  float* a = new float[N*sizeof(float)];
-  float* b = new float[N*sizeof(float)]();
-  float* c = new float[N*sizeof(float)];
+  float* a = new float[N];
+  float* b = new float[N]();
+  float* c = new float[N];
 
   // Setup the values of a
   for(int i=0;i<N;i++)
