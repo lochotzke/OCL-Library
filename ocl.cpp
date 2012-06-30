@@ -44,6 +44,8 @@ ocl_setup::ocl_setup(){
 }
 
 ocl_setup::ocl_setup(const ocl_setup& s){
+  allocs = NULL;
+
   *this = s;
 }
 
@@ -283,7 +285,8 @@ ocl_kernel::ocl_kernel(){
 
 ocl_kernel::ocl_kernel(const ocl_kernel& k){
   allocs = NULL;
-  inputSize = NULL;  
+  inputSize = NULL;
+
   *this = k;
 }
 
@@ -291,7 +294,7 @@ ocl_kernel::ocl_kernel(ocl_device* d,std::string str){
   allocs = new int[1];
   allocs[0] = 1;
 
-  nice = 1;
+  format = 1;
   setup(d,str);
 }
 
@@ -300,7 +303,7 @@ ocl_kernel::ocl_kernel(ocl_device* d,std::string str,std::string fstr){
   allocs[0] = 1;
   
   flags = fstr;
-  nice = 1;
+  format = 1;
   setup(d,str);
 }
 
@@ -308,7 +311,7 @@ ocl_kernel::ocl_kernel(ocl_device* d,std::string str,int n){
   allocs = new int[1];
   allocs[0] = 1;
   
-  nice = n;
+  format = n;
   setup(d,str);
 }
 
@@ -317,7 +320,7 @@ ocl_kernel::ocl_kernel(ocl_device* d,std::string str,std::string fstr,int n){
   allocs[0] = 1;
   
   flags = fstr;
-  nice = n;
+  format = n;
   setup(d,str);
 }
 
@@ -339,8 +342,8 @@ ocl_kernel& ocl_kernel::operator=(const ocl_kernel& k){
   name = k.name;
   function = k.function;
   inputs = k.inputs;
-  nice = k.nice;
-
+  format = k.format;
+  events = k.events;
 
   if(inputSize == NULL)
     inputSize = new int[inputs];
@@ -350,12 +353,18 @@ ocl_kernel& ocl_kernel::operator=(const ocl_kernel& k){
   inputType = k.inputType;
   groups = k.groups;
   items = k.items;
+
   return *this;
 }
 
 void ocl_kernel::destructor(){
   if(function.compare("")){
     delete[] inputSize;
+
+    for(int i=0;i<events->size();i++)
+      clReleaseEvent((*events)[i]);
+    delete[] events;
+    
     clReleaseKernel(kernel);
     clReleaseProgram(program);
   }
@@ -378,7 +387,7 @@ void ocl_kernel::copyCheck(int* allocs2){
 
 void ocl_kernel::setup(ocl_device* d,std::string str){
   device = d;
-  cl_int err;
+  cl_int err;  
 
   if(std::ifstream(str.c_str())){
     std::ifstream file(str.c_str());
@@ -398,8 +407,8 @@ void ocl_kernel::setup(ocl_device* d,std::string str){
 
   getKernelInformation(function);
   
-  if(nice)
-    function = ocl::getNiceKernel(function);
+  if(format)
+    function = ocl::getFormattedKernel(function);
 
   const char* cFunction = function.c_str();
   const size_t cLength = function.length();
@@ -423,8 +432,8 @@ void ocl_kernel::setup(ocl_device* d,std::string str){
   ocl::printError("OCL_Kernel ("+name+") : Building Program",err);
     log[logSize] = '\0';
     
-    if(!nice)
-      std::cout << ocl::getNiceKernel(function) << std::endl;
+    if(!format)
+      std::cout << ocl::getFormattedKernel(function) << std::endl;
     else
       std::cout << function << std::endl;
 
@@ -437,6 +446,8 @@ void ocl_kernel::setup(ocl_device* d,std::string str){
 
   kernel = clCreateKernel(program,name.c_str(),&err);
   ocl::printError("OCL_Kernel : Creating Kernel",err);
+
+  events = new std::vector<cl_event>[1];
 }
 
 void ocl_kernel::getKernelInformation(std::string str){
@@ -589,8 +600,51 @@ void ocl_kernel::run(size_t g,size_t i){
   run();
 }
 
+int ocl_kernel::timedRun(){
+  const size_t a = items;
+  const size_t b = groups;
+  cl_event event;
+
+  ocl::printError("OCL_Kernel ("+name+") : Kernel Timed Run",
+	     clEnqueueNDRangeKernel(device->getCommandQueue(),kernel,1,NULL,&a,&b,0,NULL,&event));
+
+  events->push_back(event);
+
+  return (events->size()-1);
+}
+
+int ocl_kernel::timedRun(size_t g,size_t i){
+  groups = g;
+  items = i;
+  return timedRun();
+}
+
+float ocl_kernel::getRunTime(int i){
+  cl_event event;
+  cl_ulong start,end;
+
+  if(i >= events->size())
+    ocl::printError("OCL_Kernel ("+name+") : Kernel Get Run Time",15);
+
+  event = (*events)[i];
+
+  clWaitForEvents(1,&event);
+
+  clGetEventProfilingInfo(event,CL_PROFILING_COMMAND_START,sizeof(cl_ulong),&start,NULL);
+  clGetEventProfilingInfo(event,CL_PROFILING_COMMAND_END,sizeof(cl_ulong),&end,NULL);  
+
+  return (end-start)*1e-9;
+}
+
 void ocl_kernel::printKernel(){
   std::cout << function << std::endl;
+}
+
+void ocl_kernel::printFormattedKernel(){
+  if(format)
+    std::cout << function << std::endl;
+  else
+    std::cout << ocl::getFormattedKernel(function) << std::endl;    
 }
 
 cl_kernel ocl_kernel::getKernel(){
@@ -640,6 +694,8 @@ ocl_device::ocl_device(){
 }
 
 ocl_device::ocl_device(const ocl_device& d){
+  allocs = NULL;
+
   *this = d;
 }
 
@@ -767,6 +823,8 @@ ocl_context::ocl_context(){
 }
 
 ocl_context::ocl_context(const ocl_context& c){
+  allocs = NULL;
+
   *this = c;
 }
 
@@ -829,6 +887,8 @@ ocl_commandQueue::ocl_commandQueue(){
 }
 
 ocl_commandQueue::ocl_commandQueue(const ocl_commandQueue& cq){
+  allocs = NULL;
+
   *this = cq;
 }
 
@@ -874,7 +934,7 @@ void ocl_commandQueue::create(cl_context context,cl_device_id dID){
   }
   cl_int err;
   commandQueue = new cl_command_queue[1];
-  *commandQueue = clCreateCommandQueue(context,dID,0,&err);
+  *commandQueue = clCreateCommandQueue(context,dID,CL_QUEUE_PROFILING_ENABLE,&err);
   ocl::printError("OCL_CommandQueue: Creating Command Queue",err);
 }
 
@@ -902,6 +962,8 @@ ocl_mem::ocl_mem(){
 }
 
 ocl_mem::ocl_mem(const ocl_mem& m){
+  allocs = NULL;
+
   *this = m;
 }
 
@@ -1055,11 +1117,11 @@ namespace ocl{
     "CL_INVALID_GLOBAL_WORK_SIZE"       ,"CL_INVALID_PROPERTY"
   };
 
-  std::string getNiceKernel(ocl_kernel& k){
-    return getNiceKernel(k.getFunction());
+  std::string getFormattedKernel(ocl_kernel& k){
+    return getFormattedKernel(k.getFunction());
   };
 
-  std::string getNiceKernel(std::string s){
+  std::string getFormattedKernel(std::string s){
     std::vector<std::string> words;
     std::vector<int> wType;
     std::stringstream ret;

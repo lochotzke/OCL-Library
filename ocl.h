@@ -70,7 +70,9 @@ private:
 
   int groups,items;
 
-  int nice;
+  int format;
+
+  std::vector<cl_event>* events;
 
 public:
   ocl_kernel();
@@ -92,7 +94,11 @@ public:
   void setDims(size_t,size_t);
   void run();
   void run(size_t,size_t);
+  int timedRun();
+  int timedRun(size_t,size_t);
+  float getRunTime(int);
   void printKernel();
+  void printFormattedKernel();
   cl_kernel getKernel();
   cl_program getProgram();
   std::string getName();
@@ -208,8 +214,8 @@ namespace ocl{
   extern const int typeSize[];
   extern const char error[65][45];
 
-  extern std::string getNiceKernel(ocl_kernel&);
-  extern std::string getNiceKernel(std::string);
+  extern std::string getFormattedKernel(ocl_kernel&);
+  extern std::string getFormattedKernel(std::string);
   extern int parseKernelOperatorCheck(int&,int&,std::stringstream&,std::string,std::vector<std::string>&,std::vector<int>&);
   extern void checkParsedKernel(int&,std::string,std::stringstream&,std::vector<std::string>&,std::vector<int>&);
   extern void parseKernelSpaceCheck(int&,std::stringstream&,std::string,std::string&);
