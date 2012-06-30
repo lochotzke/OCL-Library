@@ -11,8 +11,7 @@ int main(){
   ocl_setup o;
 
   // Find all devices
-  //ocl_device device = o.displayDevices();
-  ocl_device device = o.getDevice(1,3);
+  ocl_device device = o.displayDevices();
  
   int N = 1024;
 
