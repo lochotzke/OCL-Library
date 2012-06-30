@@ -15,13 +15,12 @@ int main(){
  
   int N = 102400;
 
-  ocl_kernel dummy(&device,"__kernel void dummy(){}");
-
   // We'll get the group size of the device for the first dimension
   int groupSize = device.getGroupSize(0);
 
   // Only kernels can see the warp size (NVIDIA) or wavefront size (AMD)
   //   so we'll make a dummy kernel to find the information
+  ocl_kernel dummy(&device,"__kernel void dummy(){}");
   int warpSize = dummy.getWarpSize();
 
   // We'll make the reduction with partitions
@@ -45,7 +44,7 @@ int main(){
   float* b = new float[N];
   float* c = new float[partitions];
 
-  // Setup the values of a
+  // Setup the values of a and b
   for(int i=1;i<=N;i++){
     a[i-1] = i;
     b[i-1] = i;
@@ -67,6 +66,8 @@ int main(){
   int tID = reduction.timedRun(groupSize,partitions*groupSize);
 
   // Print the time taken
+  // Note: getRunTime() waits for the event to finish executing
+  //         which might block the command queue
   cout << fixed << "Time Taken: " << reduction.getRunTime(tID) << " ms\n";
 
   // Copy device variable _c to host variable c
@@ -75,6 +76,7 @@ int main(){
   for(int i=1;i<partitions;i++)
     c[0] += c[i];
   
+  // Sum of squares
   float expected = (N/6.f)*(N+1)*(2*N+1.f);
   cout << scientific
        << "Reduction          : " << c[0] << endl
@@ -101,11 +103,11 @@ string getReductionKernel(int size,int groupSize,int warpSize,int partitions,int
   // We can easily unroll the for loop
   //   as well as get rid of the if-checks
   for(int i=0;i<loops-1;i++)
-    ret << "value += a[gID+" << i*partitions*groupSize << "]*b[gID+" << i*partitions*groupSize << "];";
+    ret << "value += a[gID]*b[gID];"
+	<< "gID +=" << partitions*groupSize << ";";
 
-  ret << "if(gID < " << (size-(loops-1)*partitions*groupSize) << "){"
-      << "value += a[gID+" << (loops-1)*partitions*groupSize <<"]*b[gID+" << (loops-1)*partitions*groupSize <<"];"
-      << "}";
+  ret << "if(gID < " << size << ")"
+      << "value += a[gID]*b[gID];";
 
   // We unroll the local reductions 
   //   (Assuming groupSize is a multiple of 2)
