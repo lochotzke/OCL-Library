@@ -31,7 +31,7 @@ int main(){
   //   Good for debugging
   cout << ocl::getFormattedKernel(getReductionKernel(N,groupSize,warpSize,partitions,loops)) << endl;
 
-  // Create a kernel using the device above from vectoradd.cl
+  // Create a kernel using the device above from getReductionKernel()
   //   We'll use the warp size (NVIDIA) or wavefront size (AMD)
   //   To make our add kernel more dynamics
   ocl_kernel reduction(&device,getReductionKernel(N,groupSize,warpSize,partitions,loops));
