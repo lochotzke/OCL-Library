@@ -1148,11 +1148,13 @@ namespace ocl{
 	if(!tmp.compare("for")){
 	  fc = 0;
 	  ret << indent << "for";
+	  
 
 	  while(pos < wordsSize && words[pos].compare("("))
 	    ret << ' ' << words[pos++];
 
 	  ret << "(";
+	  space = 0;
 
 	  while(++pos < wordsSize && fc < 3){
 	    if(!words[pos].compare(";")){
@@ -1237,9 +1239,9 @@ namespace ocl{
 
     if(word.length() > 1){
       ch = word[0];
-      if(!word.compare("--") || !word.compare("++")){
+      if(!word.compare("--") || !word.compare("++") || !word.compare("->")){
+	ret << word;
 	space = 0;
-	parseKernelSpaceCheck(space,ret,indent,word);
       }
       else if(!word.compare("//") || !word.compare("/*")){
 	ret << '\n' << word << words[++pos];
@@ -1265,8 +1267,11 @@ namespace ocl{
 	checkParsedKernel(++pos,indent+"   ",ret,words,wType);
 	space = 2;
       }
-      else if(!(ch - '(') || !(ch - '[') || !(ch - ',') || !(ch - '!')){
-	ret << ch;
+      else if(!(ch - '(') || !(ch - '[') || !(ch - ',') || !(ch - '!') || !(ch - '.')){
+	if(pos > 1 && wType[pos-1] > 0)
+	  ret << ' ' << ch;
+	else
+	  ret << ch;
 	space = 0;
       }
       else if(!(ch - ')') || !(ch - ']')){
@@ -1298,8 +1303,8 @@ namespace ocl{
   }
 
   void parseKernel(std::string s, std::vector<std::string>& words, std::vector<int>& wType){
-    const std::string delim1 = "({[)}],;~*%?:^&|-+/!=<>#";
-    const std::string delim2 = "*/^^*=&&/=||--++==!=//+=<<-=>>/*<=>=";
+    const std::string delim1 = "({[)}],;~*%?:^&|-+/!=<>#.";
+    const std::string delim2 = "*/^^*=&&/=||--++==!=//+=<<-=>>/*<=>=->";
     
     int length = s.length();
     std::stringstream ret;
