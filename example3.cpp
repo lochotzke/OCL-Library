@@ -23,7 +23,7 @@ int main(){
   // We'll make the reduction with partitions
   int partitions = 10;
 
-  // Each partition will do 10 summations  
+  // Each partition will multiply loops*groupSize number of entries
   int loops = (N + partitions*groupSize - 1)/(partitions*groupSize);
 
   // We can use OCL's printFormattedKernel to see the nice output of 
