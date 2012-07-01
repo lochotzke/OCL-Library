@@ -3,11 +3,8 @@
 
 using namespace std;
 int main(){
-  // Get available devices and platforms
-  ocl_setup o;
-
   // Find all devices
-  ocl_device device = o.displayDevices();
+  ocl_device device = ocl::displayDevices();
 
   // Create a kernel using the device above from vectoradd.cl
   ocl_kernel kernel(&device,"vectoradd.cl");

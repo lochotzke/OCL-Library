@@ -7,11 +7,8 @@ using namespace std;
 string getAddKernel(int);
 
 int main(){
-  // Get available devices and platforms
-  ocl_setup o;
-
   // Find all devices
-  ocl_device device = o.displayDevices();
+  ocl_device device = ocl::displayDevices();
  
   int N = 1024;
 
