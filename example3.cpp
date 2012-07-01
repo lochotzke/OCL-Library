@@ -7,11 +7,11 @@ using namespace std;
 string getReductionKernel(int,int,int,int,int);
 
 int main(){
-  // Get available devices and platforms
-  ocl_setup o;
-
+  // Update: ocl namespace has an ocl_setup class to simplify
+  //            the act of getting devices 
+  // Note: This makes ocl_setup instantiation obsolete
   // Find all devices
-  ocl_device device = o.displayDevices();
+  ocl_device device = ocl::displayDevices();
  
   int N = 102400;
 

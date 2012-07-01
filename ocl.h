@@ -208,7 +208,13 @@ public:
 
 // Opencl Variable Sizes
 namespace ocl{
+  extern ocl_setup setup;
 
+  extern ocl_device displayDevices();
+  extern ocl_device getDevice(int,int);
+  extern cl_platform_id getPlatformID(int);
+  extern cl_device_id getDeviceID(int,int);
+  
   extern const int types;
   extern const std::string type[];
   extern const int typeSize[];

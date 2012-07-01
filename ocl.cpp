@@ -1062,6 +1062,24 @@ size_t ocl_mem::getSize(){
 
 // Opencl Variable Sizes
 namespace ocl{
+  ocl_setup setup;
+
+  ocl_device displayDevices(){
+    return ocl::setup.displayDevices();
+  };
+
+  ocl_device getDevice(int p,int d){
+    return ocl::setup.getDevice(p,d);
+  };
+
+  cl_platform_id getPlatformID(int p){
+    return ocl::setup.getPlatformID(p);
+  };
+
+  cl_device_id getDeviceID(int p,int d){
+    return ocl::setup.getDeviceID(p,d);
+  };
+
   const int types = 62;
 
   const std::string type[] = {
