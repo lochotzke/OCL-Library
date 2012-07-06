@@ -1198,8 +1198,18 @@ namespace ocl{
 	    }
 	  }
 	}
+	else if(!tmp.compare("else")){
+	  ret << indent << "else";
+	  if(pos < wordsSize && (!words[pos].compare("if") || !words[pos].compare("{")))
+	    space = 0;
+	  else
+	    space = 2;
+	}
 	else if(!tmp.compare("if")){
-	  ret << indent << "if";
+	  if(pos > 2 && words[pos-2].compare("else"))
+	    ret << indent << "if";
+	  else
+	    ret << " if";
 	  space = 0;
 	  fc = 0;
 
