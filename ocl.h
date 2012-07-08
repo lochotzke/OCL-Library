@@ -68,7 +68,9 @@ private:
   int* inputSize;
   std::vector<std::string> inputType;
 
-  int groups,items;
+  cl_uint dims;
+  size_t* lDims;
+  size_t* gDims;
 
   int format;
 
@@ -92,10 +94,14 @@ public:
   void setArg(int,void*);
   std::string getArgType(int);
   void setDims(size_t,size_t);
+  void setDims(int,size_t,size_t);
+  void setDims(int,size_t*,size_t*);
   void run();
   void run(size_t,size_t);
+  void run(int,size_t*,size_t*);
   int timedRun();
   int timedRun(size_t,size_t);
+  int timedRun(int,size_t*,size_t*);
   float getRunTime(int);
   void printKernel();
   void printFormattedKernel();
